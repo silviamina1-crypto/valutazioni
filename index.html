@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -248,7 +247,9 @@ textarea, select, input { font-family: inherit; }
 </head>
 <body>
 <div id="root"></div>
+<div id="err" style="display:none;padding:20px;color:red;font-size:13px;font-family:monospace"></div>
 <script>
+window.onerror=function(msg,src,line){document.getElementById('err').style.display='block';document.getElementById('err').textContent='Errore: '+msg+' (riga '+line+')';};
 // ════════════════════════════════════════════════════════════
 // AUTH — email + password unica condivisa
 // La password è uguale per tutti, non visibile né modificabile
@@ -489,7 +490,7 @@ function fascia(sc){
 function countDone(ev,tg,groups){ return groups.flatMap(g=>g.criteria).filter(c=>S.ratings[K(ev,tg,c.id)]).length; }
 function totalCrit(groups){ return groups.flatMap(g=>g.criteria).length; }
 function roleName(r){ return {partner_fondatore:"Partner Fondatore",partner:"Partner",manager:"Manager",manager_self:"Manager",professionista:"Professionista",praticante:"Praticante",admin:"Admin",master:"Partner — Accesso Master"}[r]||r; }
-function isMaster(){ return S.user?.role==="master"; }
+function isMaster(){ return S.user && S.user.role==="master"; }
 
 function toast(msg){ S.toast=msg; render(); setTimeout(()=>{ S.toast=null; render(); },2200); }
 
@@ -613,8 +614,8 @@ function renderLogin(){
 }
 
 function doLogin(){
-  const email = (document.getElementById("l-email")?.value||"").trim().toLowerCase();
-  const pwd   = (document.getElementById("l-pwd")?.value||"").trim();
+  const email = (document.getElementById("l-email") && document.getElementById("l-email").value||"").trim().toLowerCase();
+  const pwd   = (document.getElementById("l-pwd") && document.getElementById("l-pwd").value||"").trim();
   S.lastEmail = email;
   const userDef = USERS[email];
   if(!userDef){ S.loginError="Email non riconosciuta. Usa la tua mail @cmfc.it"; render(); return; }
@@ -711,8 +712,8 @@ function renderHome(){
     const evalTasks = tasks.filter(t=>t.type==="eval");
     const mgTasks = tasks.filter(t=>t.type==="mgeval");
     if(evalTasks.length){
-      const pratTasks = evalTasks.filter(t=>COLLABS[t.tid]?.level==="Praticante");
-      const profTasks = evalTasks.filter(t=>COLLABS[t.tid]?.level==="Professionista");
+      const pratTasks = evalTasks.filter(t=>COLLABS[t.tid] && COLLABS[t.tid].level==="Praticante");
+      const profTasks = evalTasks.filter(t=>COLLABS[t.tid] && COLLABS[t.tid].level==="Professionista");
       if(pratTasks.length){
         html+=`<div class="sec-lbl">Praticanti da valutare</div><div class="card">`;
         for(const t of pratTasks) html+=taskRow(t,"eval");
@@ -767,13 +768,13 @@ function renderForm(){
   const tk=S.token, tid=S.formTarget;
   const isManager = S.formIsManager;
   const info = isManager ? MANAGERS_LIST.find(m=>m.id===tid) : COLLABS[tid];
-  const label = isManager ? "Manager" : info?.level||"";
+  const label = isManager ? "Manager" : info && info.level||"";
   const sub = S.submitted[`${tk}:${tid}`];
   const groups = isManager ? [...CRIT_COLLAB, ...CRIT_LEADER] : CRIT_COLLAB;
 
   let html=`<div class="card form-hdr">
     <button class="back-btn" data-a="home">← Torna all'elenco</button>
-    <div class="form-title">${info?.name||tid}</div>
+    <div class="form-title">${info && info.name||tid}</div>
     <div class="form-sub">${label} · Valutazioni 2026</div>
     ${sub?`<div style="margin-top:8px"><span class="badge b-done">✓ Scheda inviata</span></div>`:""}
   </div>`;
@@ -799,7 +800,7 @@ function renderForm(){
     html+=`</div>`;
   }
 
-  const isPartnerRole = ["partner","partner_fondatore","master"].includes(S.user?.role);
+  const isPartnerRole = ["partner","partner_fondatore","master"].includes(S.user && S.user.role);
   html+=`<div class="card open-card"><h3>Giudizio complessivo${isPartnerRole ? "" : ` <span style="font-size:11px;font-weight:400;color:var(--g400)">(min. 30 caratteri per campi *)</span>`}</h3>`;
   for(const q of OPEN_EVAL) html+=`<div class="open-q"><label>${q.l}${(!isPartnerRole && ["pf","am"].includes(q.id))?" *":""}</label><textarea data-a="openans" data-qid="${q.id}" data-ev="${tk}" data-tg="${tid}" placeholder="...">${S.openAnswers[K(tk,tid,q.id)]||""}</textarea></div>`;
   html+=`</div>`;
@@ -1198,7 +1199,10 @@ function renderMaster(){
   }
 
   return html;
-} — dettaglio scheda per singola persona (da master)
+}
+
+// ════════════════════════════════════════════════════════════
+// INSPECT — dettaglio scheda per singola persona (da master)
 // ════════════════════════════════════════════════════════════
 function renderInspect(){
   const {inspectId:tid, inspectName:tname, inspectType:itype} = S;
@@ -1300,7 +1304,7 @@ function onClick(e){
   const a=el.dataset.a;
   if(a==="splash-next"){ splashNext(); return; }
   if(a==="splash-skip"){ splashDone(); return; }
-  if(a==="banner-close"){ S.bannerDismissed=true; document.getElementById("home-banner")?.remove(); return; }
+  if(a==="banner-close"){ S.bannerDismissed=true; var _hb=document.getElementById("home-banner"); if(_hb) _hb.remove(); return; }
   if(a==="do-login"){ doLogin(); return; }
   if(a==="logout"){ S.user=null; S.token=null; S.view="login"; S.loginError=null; render(); return; }
   if(a==="home"){ S.view = isMaster() ? "master" : "home"; render(); window.scrollTo(0,0); return; }
@@ -1321,19 +1325,20 @@ function onClick(e){
     return;
   }
   if(a==="nv-cancel"){
-    document.getElementById("nv-modal")?.remove();
+    var _nm=document.getElementById("nv-modal"); if(_nm) _nm.remove();
     return;
   }
   if(a==="nv-confirm"){
-    document.getElementById("nv-modal")?.remove();
+    var _nm=document.getElementById("nv-modal"); if(_nm) _nm.remove();
     const key=K(el.dataset.ev,el.dataset.tg,el.dataset.cid);
     S.ratings[key]="NV";
     saveStorage();
     // Update star display: deselect numbers, highlight NV
-    const starsWrap = document.querySelector(`.star-nv[data-cid="${el.dataset.cid}"]`)?.closest(".stars");
+    const starsWrapEl = document.querySelector(`.star-nv[data-cid="${el.dataset.cid}"]`);
+    const starsWrap = starsWrapEl ? starsWrapEl.closest(".stars") : null;
     if(starsWrap){
       starsWrap.querySelectorAll(".star").forEach(s=>s.classList.remove("sel"));
-      starsWrap.querySelector(".star-nv")?.classList.add("sel-nv");
+      var nvBtn = starsWrap.querySelector(".star-nv"); if(nvBtn) nvBtn.classList.add("sel-nv");
     }
     return;
   }
@@ -1345,16 +1350,16 @@ function onClick(e){
     else {
       S.ratings[key]=newVal; saveStorage();
       el.closest(".stars").querySelectorAll(".star").forEach(s=>s.classList.toggle("sel",parseInt(s.dataset.v)===newVal));
-      el.closest(".stars").querySelector(".star-nv")?.classList.remove("sel-nv");
+      var nvBtn2 = el.closest(".stars").querySelector(".star-nv"); if(nvBtn2) nvBtn2.classList.remove("sel-nv");
     }
     return;
   }
   if(a==="submit"){
     const ev=el.dataset.ev, tg=el.dataset.tg;
-    const isPartnerRole = ["partner","partner_fondatore","master"].includes(S.user?.role);
+    const isPartnerRole = ["partner","partner_fondatore","master"].includes(S.user && S.user.role);
     const isSelf = tg==="self";
     const isMgrEval = S.formIsManager;
-    const groups = isMgrEval ? [...CRIT_COLLAB,...CRIT_LEADER] : (isSelf ? (["manager","master"].includes(S.user?.role)?CRIT_SELF_MANAGER:CRIT_COLLAB) : CRIT_COLLAB);
+    const groups = isMgrEval ? [...CRIT_COLLAB,...CRIT_LEADER] : (isSelf ? (["manager","master"].includes(S.user && S.user.role)?CRIT_SELF_MANAGER:CRIT_COLLAB) : CRIT_COLLAB);
     const allCrit = groups.flatMap(g=>g.criteria);
     const missing = allCrit.filter(c=>!S.ratings[K(ev,tg,c.id)]); // NV è truthy, conta come risposto
     // Partner e fondatori: commento facoltativo. Manager e collaboratori: obbligatorio
@@ -1399,7 +1404,7 @@ function attachLoginKeys(){
   const pwd = document.getElementById("l-pwd");
   if(pwd) pwd.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
   const email = document.getElementById("l-email");
-  if(email) email.addEventListener("keydown", e=>{ if(e.key==="Enter") document.getElementById("l-pwd")?.focus(); });
+  if(email) email.addEventListener("keydown", e=>{ if(e.key==="Enter"){ var p=document.getElementById("l-pwd"); if(p) p.focus(); } });
 }
 function attachGlobal(){
   document.removeEventListener("click",onClick);
