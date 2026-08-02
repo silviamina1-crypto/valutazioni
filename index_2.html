@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CMFC · Valutazioni 2025–2026</title>
+<style>
+:root {
+  /* ── CMFC brand palette ── */
+  --navy:      #1A2E4A;   /* blu scuro logo CMFC */
+  --teal:      #3AAFA9;   /* verde acqua accento CMFC */
+  --teal-dark: #2A8F8A;
+  --teal-bg:   #E8F7F6;
+  --teal-pale: #F2FBFA;
+  --sky:       #D0ECEA;
+  --white:     #FFFFFF;
+  --g50:       #F7F8FA;
+  --g100:      #EFF1F4;
+  --g200:      #DDE1E7;
+  --g400:      #9AA5B4;
+  --g600:      #4A5568;
+  --g800:      #1A202C;
+  --green:     #166534;
+  --green-bg:  #DCFCE7;
+  --red:       #991B1B;
+  --red-bg:    #FEE2E2;
+  --amber-bg:  #FEF3C7;
+  --amber-txt: #92400E;
+  --r:         8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--g50); color: var(--g800); min-height: 100vh; font-size: 15px; }
+button { font-family: inherit; cursor: pointer; }
+textarea, select, input { font-family: inherit; }
+
+/* ── HEADER ── */
+.hdr { background: var(--navy); color: #fff; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px; position: sticky; top: 0; z-index: 50; border-bottom: 3px solid var(--teal); }
+.hdr-brand { font-size: 15px; font-weight: 700; letter-spacing: .2px; display: flex; align-items: center; gap: 10px; }
+.hdr-brand::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--teal); border-radius: 50%; }
+.hdr-right { display: flex; align-items: center; gap: 10px; }
+.hdr-user { font-size: 12px; background: rgba(255,255,255,.1); border-radius: 4px; padding: 5px 11px; letter-spacing: .1px; }
+.hdr-logout { font-size: 12px; background: transparent; border: 1px solid rgba(255,255,255,.2); border-radius: 4px; padding: 5px 11px; color: rgba(255,255,255,.8); }
+.hdr-logout:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+/* ── LAYOUT ── */
+.page { max-width: 720px; margin: 0 auto; padding: 22px 14px 80px; }
+
+/* ── CARDS ── */
+.card { background: #fff; border-radius: var(--r); box-shadow: 0 1px 4px rgba(26,46,74,.07); border: 1px solid var(--g200); }
+.card + .card { margin-top: 12px; }
+
+/* ── WELCOME ── */
+.welcome { padding: 20px; border-left: 4px solid var(--teal); margin-bottom: 18px; }
+.welcome h2 { font-size: 18px; font-weight: 700; color: var(--navy); }
+.welcome p { font-size: 13px; color: var(--g600); margin-top: 3px; }
+.prog-wrap { margin-top: 14px; }
+.prog-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--g600); margin-bottom: 5px; }
+.prog-bar { height: 4px; background: var(--g200); border-radius: 2px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width .4s; }
+
+/* ── SECTION LABEL ── */
+.sec-lbl { font-size: 11px; font-weight: 700; color: var(--g400); text-transform: uppercase; letter-spacing: .8px; margin: 18px 0 8px; }
+
+/* ── TASK ITEM ── */
+.task { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; transition: background .15s; border-radius: var(--r); }
+.task:hover { background: var(--teal-pale); }
+.task + .task { border-top: 1px solid var(--g100); border-radius: 0; }
+.task:last-child { border-bottom-left-radius: var(--r); border-bottom-right-radius: var(--r); }
+.av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.av-blue { background: var(--teal-bg); color: var(--teal-dark); }
+.av-gold { background: var(--amber-bg); color: var(--amber-txt); }
+.av-green { background: var(--green-bg); color: var(--green); }
+.task-info { flex: 1; min-width: 0; }
+.task-name { font-size: 14px; font-weight: 600; color: var(--g800); }
+.task-meta { font-size: 12px; color: var(--g400); margin-top: 2px; }
+.badge { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.b-todo { background: var(--amber-bg); color: var(--amber-txt); }
+.b-partial { background: var(--teal-bg); color: var(--teal-dark); }
+.b-done { background: var(--green-bg); color: var(--green); }
+
+/* ── FORM HEADER ── */
+.form-hdr { padding: 16px; margin-bottom: 14px; }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--teal-dark); background: none; border: none; padding: 0; margin-bottom: 12px; }
+.back-btn:hover { color: var(--navy); }
+.form-title { font-size: 17px; font-weight: 700; color: var(--navy); }
+.form-sub { font-size: 13px; color: var(--g400); margin-top: 3px; }
+
+/* ── AREA BLOCK ── */
+.area-block { margin-bottom: 14px; border-radius: var(--r); overflow: hidden; border: 1px solid var(--g200); }
+.area-hdr { padding: 11px 16px; display: flex; align-items: center; justify-content: space-between; }
+.area-hdr-A { background: var(--navy); }
+.area-hdr-B { background: #1E3D5C; }
+.area-hdr-C { background: #22496B; }
+.area-hdr-D { background: var(--teal-dark); }
+.area-hdr-E { background: #2A8078; }
+.area-hdr-L { background: #163248; }
+.area-title { color: #fff; font-size: 13px; font-weight: 600; }
+.area-weight { background: rgba(255,255,255,.18); color: rgba(255,255,255,.9); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+
+/* ── CRITERION ── */
+.crit-row { padding: 14px 16px; border-bottom: 1px solid var(--g100); background: #fff; }
+.crit-row:last-child { border-bottom: none; }
+.crit-row:nth-child(even) { background: var(--g50); }
+.crit-label { font-size: 13px; font-weight: 700; color: var(--g800); margin-bottom: 2px; }
+.crit-desc { font-size: 12px; color: var(--g400); margin-bottom: 10px; line-height: 1.4; }
+
+.stars { display: flex; gap: 6px; margin-bottom: 10px; }
+.star { flex: 1; border: 1.5px solid var(--g200); border-radius: 6px; padding: 9px 2px 7px; text-align: center; cursor: pointer; background: var(--g50); transition: all .12s; -webkit-tap-highlight-color: transparent; }
+.star:hover { border-color: var(--teal); background: var(--teal-pale); }
+.star.sel { border-color: var(--teal); background: var(--teal); color: #fff; }
+.star.sel-nv { border-color: var(--g400); background: var(--g200); color: var(--g600); }
+.star .sn { font-size: 17px; font-weight: 800; line-height: 1; display: block; }
+.star .sl { font-size: 9px; font-weight: 600; text-transform: uppercase; opacity: .8; display: block; margin-top: 2px; }
+.star-nv { flex: none; width: 52px; border: 1.5px solid var(--g200); border-radius: 6px; padding: 9px 4px 7px; text-align: center; cursor: pointer; background: var(--g50); transition: all .12s; -webkit-tap-highlight-color: transparent; }
+.star-nv:hover { border-color: var(--g400); background: var(--g100); }
+.star-nv.sel-nv { border-color: var(--g400); background: var(--g200); color: var(--g600); }
+.star-nv .sn { font-size: 11px; font-weight: 800; line-height: 1; display: block; }
+.star-nv .sl { font-size: 8px; font-weight: 600; text-transform: uppercase; opacity: .7; display: block; margin-top: 2px; }
+
+/* ── MODAL ── */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(26,46,74,.55); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-box { background: #fff; border-radius: 10px; padding: 28px 24px; max-width: 380px; width: 100%; border-top: 4px solid var(--teal); box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+.modal-icon { font-size: 36px; margin-bottom: 12px; text-align: center; }
+.modal-title { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.modal-body { font-size: 13px; color: var(--g600); line-height: 1.6; margin-bottom: 20px; }
+.modal-body strong { color: var(--navy); }
+.modal-actions { display: flex; gap: 10px; }
+.modal-confirm { flex: 1; background: var(--g100); color: var(--g600); border: 1.5px solid var(--g200); border-radius: 6px; padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.modal-confirm:hover { background: var(--g200); }
+.modal-cancel { flex: 2; background: var(--teal); color: #fff; border: none; border-radius: 6px; padding: 11px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.modal-cancel:hover { background: var(--teal-dark); }
+
+.note-lbl { font-size: 10px; font-weight: 700; color: var(--g400); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+.note-ta { width: 100%; border: 1.5px solid var(--g200); border-radius: 6px; padding: 8px 10px; font-size: 13px; color: var(--g800); resize: none; background: var(--g50); outline: none; min-height: 52px; }
+.note-ta:focus { border-color: var(--teal); background: #fff; }
+
+/* ── OPEN Q ── */
+.open-card { padding: 16px; margin-bottom: 14px; }
+.open-card h3 { font-size: 12px; font-weight: 700; color: var(--teal-dark); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 14px; border-bottom: 2px solid var(--teal-bg); padding-bottom: 8px; }
+.open-q { margin-bottom: 14px; }
+.open-q label { display: block; font-size: 13px; font-weight: 600; color: var(--g800); margin-bottom: 6px; line-height: 1.4; }
+.open-q textarea { width: 100%; border: 1.5px solid var(--g200); border-radius: 6px; padding: 9px 11px; font-size: 13px; color: var(--g800); resize: vertical; min-height: 64px; background: var(--g50); outline: none; }
+.open-q textarea:focus { border-color: var(--teal); background: #fff; }
+
+/* ── SCORE SUMMARY ── */
+.score-card { padding: 18px; text-align: center; margin-bottom: 14px; }
+.score-big { font-size: 38px; font-weight: 800; color: var(--navy); }
+.score-sub { font-size: 13px; color: var(--g400); }
+.fascia-pill { display: inline-block; padding: 5px 14px; border-radius: 4px; font-size: 13px; font-weight: 700; margin-top: 8px; }
+.f-crescita { background: var(--red-bg); color: var(--red); }
+.f-adeguato { background: var(--amber-bg); color: var(--amber-txt); }
+.f-buono { background: var(--teal-bg); color: var(--teal-dark); }
+.f-eccellente { background: #D1FAE5; color: #065F46; }
+
+/* ── SUBMIT ── */
+.submit-area { padding: 4px 0 20px; }
+.btn-submit { width: 100%; background: var(--teal); color: #fff; border: none; border-radius: var(--r); padding: 15px; font-size: 15px; font-weight: 700; margin-bottom: 10px; transition: background .2s; }
+.btn-submit:hover { background: var(--teal-dark); }
+.btn-draft { width: 100%; background: transparent; color: var(--teal-dark); border: 1.5px solid var(--sky); border-radius: var(--r); padding: 11px; font-size: 13px; font-weight: 600; }
+.btn-draft:hover { background: var(--teal-pale); }
+
+/* ── SUCCESS ── */
+.success-wrap { text-align: center; padding: 60px 20px; }
+.success-icon { font-size: 52px; margin-bottom: 14px; }
+.success-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--g600); margin-bottom: 24px; }
+.btn-home { background: var(--teal); color: #fff; border: none; border-radius: var(--r); padding: 12px 28px; font-size: 14px; font-weight: 600; }
+
+/* ── DASHBOARD ── */
+.dash-hdr { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.dash-hdr h2 { font-size: 18px; font-weight: 700; color: var(--navy); flex: 1; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.stat-c { background: #fff; border: 1px solid var(--g200); border-radius: var(--r); padding: 14px; text-align: center; border-top: 3px solid var(--teal); }
+.stat-n { font-size: 26px; font-weight: 800; color: var(--navy); }
+.stat-l { font-size: 11px; color: var(--g400); font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-top: 3px; }
+.export-btn { background: var(--teal-bg); color: var(--teal-dark); border: 1.5px solid var(--sky); border-radius: 6px; padding: 9px 16px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.export-btn:hover { background: var(--sky); }
+
+/* ── TABLE ── */
+.tbl-wrap { background: #fff; border: 1px solid var(--g200); border-radius: var(--r); overflow: hidden; margin-bottom: 18px; }
+.tbl-hdr { display: grid; grid-template-columns: 1fr 52px 52px 52px 52px 52px 80px; padding: 10px 12px; background: var(--navy); gap: 4px; align-items: center; }
+.th { font-size: 10px; font-weight: 700; color: rgba(255,255,255,.65); text-transform: uppercase; letter-spacing: .4px; text-align: center; }
+.th:first-child { text-align: left; }
+.tbl-row { display: grid; grid-template-columns: 1fr 52px 52px 52px 52px 52px 80px; padding: 11px 12px; border-bottom: 1px solid var(--g100); gap: 4px; align-items: center; }
+.tbl-row:last-child { border-bottom: none; }
+.tbl-row:hover { background: var(--teal-pale); }
+.tc-name { font-size: 13px; font-weight: 600; color: var(--g800); }
+.tc-level { font-size: 11px; color: var(--g400); }
+.tc-score { font-size: 13px; font-weight: 700; text-align: center; color: var(--navy); }
+.tc-empty { color: var(--g200); text-align: center; font-size: 13px; }
+.tc-fascia { text-align: center; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff; padding: 11px 22px; border-radius: 24px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 999; animation: fadeup .25s ease; pointer-events: none; }
+@keyframes fadeup { from { opacity:0; transform: translateX(-50%) translateY(8px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+/* ── SPLASH ── */
+.splash { position: fixed; inset: 0; background: var(--navy); z-index: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 24px; text-align: center; animation: splashin .5s ease; }
+@keyframes splashin { from { opacity:0; } to { opacity:1; } }
+.splash-out { animation: splashout .45s ease forwards; }
+@keyframes splashout { from { opacity:1; transform: scale(1); } to { opacity:0; transform: scale(1.03); } }
+.splash-dot { width: 10px; height: 10px; background: var(--teal); border-radius: 50%; margin: 0 auto 20px; animation: pulse 2s ease infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.6} }
+.splash-logo { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -.3px; margin-bottom: 6px; }
+.splash-sub { font-size: 13px; color: rgba(255,255,255,.5); letter-spacing: .4px; margin-bottom: 48px; }
+.splash-quote { font-size: 22px; font-weight: 700; color: #fff; line-height: 1.35; max-width: 480px; margin: 0 auto 16px; }
+.splash-quote em { color: var(--teal); font-style: normal; }
+.splash-body { font-size: 14px; color: rgba(255,255,255,.65); line-height: 1.7; max-width: 420px; margin: 0 auto 48px; }
+.splash-cta { background: var(--teal); color: #fff; border: none; border-radius: 8px; padding: 14px 36px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .2s; letter-spacing: .2px; }
+.splash-cta:hover { background: var(--teal-dark); }
+.splash-skip { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,.3); cursor: pointer; background: none; border: none; }
+.splash-skip:hover { color: rgba(255,255,255,.6); }
+.splash-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 36px; }
+.splash-step { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.2); transition: background .3s; }
+.splash-step.on { background: var(--teal); }
+
+/* ── HOME BANNER ── */
+.banner { border-radius: var(--r); padding: 18px 20px; margin-bottom: 18px; background: var(--navy); color: #fff; position: relative; overflow: hidden; }
+.banner::before { content:''; position:absolute; top:-20px; right:-20px; width:120px; height:120px; border-radius:50%; background: rgba(58,175,169,.15); }
+.banner-label { font-size: 10px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.banner-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; line-height: 1.3; }
+.banner-body { font-size: 13px; color: rgba(255,255,255,.65); line-height: 1.6; }
+.banner-close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: rgba(255,255,255,.3); font-size: 18px; cursor: pointer; line-height: 1; }
+.banner-close:hover { color: rgba(255,255,255,.7); }
+.center-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--navy); }
+.access-card { background: #fff; border-radius: 10px; padding: 36px 30px; width: 100%; max-width: 400px; border-top: 4px solid var(--teal); }
+.studio-logo { font-size: 22px; font-weight: 800; color: var(--navy); letter-spacing: -.3px; }
+.studio-sub { font-size: 12px; color: var(--g400); margin-top: 2px; letter-spacing: .2px; }
+.cycle-badge { display: inline-block; background: var(--teal-bg); color: var(--teal-dark); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 3px; margin-top: 8px; margin-bottom: 28px; letter-spacing: .3px; }
+
+/* ── ADMIN ── */
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th { text-align: left; padding: 8px 10px; background: var(--navy); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; }
+.admin-table td { padding: 8px 10px; border-bottom: 1px solid var(--g100); vertical-align: middle; }
+.admin-table tr:hover td { background: var(--teal-pale); }
+.copy-btn { background: var(--teal-bg); color: var(--teal-dark); border: none; border-radius: 4px; padding: 4px 10px; font-size: 11px; font-weight: 600; cursor: pointer; }
+.copy-btn:hover { background: var(--teal); color: #fff; }
+.link-cell { font-size: 11px; color: var(--g600); word-break: break-all; max-width: 200px; }
+
+@media (max-width: 480px) {
+  .tbl-hdr, .tbl-row { grid-template-columns: 1fr 40px 40px 40px 40px 40px 64px; padding: 9px 8px; gap: 2px; }
+  .tc-score, .tc-empty { font-size: 12px; }
+  .star .sl { display: none; }
+  .star { padding: 10px 2px 8px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="err" style="display:none;padding:20px;color:red;font-size:13px;font-family:monospace"></div>
+<script>
+window.onerror=function(msg,src,line){document.getElementById('err').style.display='block';document.getElementById('err').textContent='Errore: '+msg+' (riga '+line+')';};
+// ════════════════════════════════════════════════════════════
+// AUTH — email + password unica condivisa
+// La password è uguale per tutti, non visibile né modificabile
+// La password master è riservata all'account partners@cmfc.it.
+// ════════════════════════════════════════════════════════════
+const PWD_MASTER = "Severimagiusti26"; // password solo per partners@cmfc.it
+
+// Password individuali per ogni utente
+const PWDS = {
+  "mcesano@cmfc.it":      "Sole41",
+  "echieli@cmfc.it":      "Mare58",
+  "adecesare@cmfc.it":    "Luna75",
+  "aforte@cmfc.it":       "Vela92",
+  "amarengo@cmfc.it":     "Lago20",
+  "smina@cmfc.it":        "Neve37",
+  "cmotta@cmfc.it":       "Alba54",
+  "apeila@cmfc.it":       "Tigre71",
+  "lpiovano@cmfc.it":     "Falco88",
+  "gtomasicchio@gtax.it": "Rosa16",
+  "sanfosso@cmfc.it":     "Bosco33",
+  "iatzori@cmfc.it":      "Torre50",
+  "dcanensi@cmfc.it":     "Porto67",
+  "mincardona@gtax.it":   "Cedro84",
+  "alame@cmfc.it":        "Pino12",
+  "mpittavino@cmfc.it":   "Olmo29",
+  "ssanita@cmfc.it":      "Luce46",
+  "gbianciotto@cmfc.it":  "Fuoco63",
+  "amoretti@cmfc.it":     "Vento80",
+  "aperona@cmfc.it":      "Orso97",
+  "erossi@cmfc.it":       "Aquila25",
+  "csebastiani@cmfc.it":  "Riva42",
+  "salesso@cmfc.it":      "Fiore59",
+  "sdilucia@cmfc.it":     "Campo76",
+  "sdirosa@cmfc.it":      "Ponte93",
+  "agueli@cmfc.it":       "Seta21",
+  "rmangherini@cmfc.it":  "Oro38",
+  "aselvaggio@cmfc.it":   "Rame55",
+};
+
+// Mappa email → profilo utente
+// Formato: iniziale nome + cognome (senza punti) @cmfc.it
+// "id" è la chiave usata per salvare i dati nel localStorage
+const USERS = {
+  // ── PARTNER (fondatori + partner, ordine alfabetico per cognome) ──
+  "mcesano@cmfc.it":       { id:"ma", name:"Mauro Cesano",          role:"partner", canSeeAll:true },
+  "echieli@cmfc.it":       { id:"em", name:"Emanuele Chieli",        role:"partner_fondatore", canSeeAll:true },
+  "adecesare@cmfc.it":     { id:"an", name:"Antonella De Cesare",    role:"partner", canSeeAll:true },
+  "aforte@cmfc.it":        { id:"al", name:"Alessandro Forte",       role:"partner_fondatore", canSeeAll:true },
+  "amarengo@cmfc.it":      { id:"ab", name:"Alberto Marengo",        role:"partner", canSeeAll:true },
+  "smina@cmfc.it":         { id:"sm", name:"Silvia Mina",            role:"partner",  canSeeAll:true },
+  "cmotta@cmfc.it":        { id:"ca", name:"Carlo Motta",            role:"partner", canSeeAll:true },
+  "apeila@cmfc.it":        { id:"ap", name:"Alberto Peila",          role:"partner", canSeeAll:true },
+  "lpiovano@cmfc.it":      { id:"lu", name:"Luca Piovano",           role:"partner_fondatore", canSeeAll:true },
+  "gtomasicchio@gtax.it":  { id:"gi", name:"Giorgio Tomasicchio",    role:"partner_fondatore", canSeeAll:true },
+  // ── ACCESSO MASTER ──
+  "partners@cmfc.it":      { id:"master", name:"Vista Master",       role:"master",  canSeeAll:true },
+  // ── MANAGER (ordine alfabetico per cognome) ──
+  "sanfosso@cmfc.it":      { id:"st", name:"Stefania Anfosso",       role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  "iatzori@cmfc.it":       { id:"il", name:"Ilenia Atzori",          role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  "dcanensi@cmfc.it":      { id:"dn", name:"Daniela Canensi",        role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  "mincardona@gtax.it":    { id:"mg", name:"Mariangela Incardona",   role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  "alame@cmfc.it":         { id:"ar", name:"Ardita Lame",            role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  "mpittavino@cmfc.it":    { id:"mt", name:"Martina Pittavino",      role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  "ssanita@cmfc.it":       { id:"si", name:"Simona Sanità",          role:"manager", collaboratori:["c_01","c_02","c_03","c_04","c_05","c_11","c_06","c_07","c_08","c_09","c_10"] },
+  // ── PROFESSIONISTI (ordine alfabetico per cognome) ──
+  "gbianciotto@cmfc.it":   { id:"c07", name:"Giulia Bianciotto",     role:"professionista" },
+  "amoretti@cmfc.it":      { id:"c09", name:"Andrea Moretti",        role:"professionista" },
+  "aperona@cmfc.it":       { id:"c10", name:"Alberto Perona",        role:"professionista" },
+  "erossi@cmfc.it":        { id:"c08", name:"Elena Rossi",           role:"professionista" },
+  "csebastiani@cmfc.it":   { id:"c06", name:"Carlotta Sebastiani",   role:"professionista" },
+  // ── PRATICANTI (ordine alfabetico per cognome) ──
+  "salesso@cmfc.it":       { id:"c01", name:"Silvia Alesso",         role:"praticante" },
+  "sdilucia@cmfc.it":      { id:"c03", name:"Sara Di Lucia",         role:"praticante" },
+  "sdirosa@cmfc.it":       { id:"c04", name:"Sara Di Rosa",          role:"praticante" },
+  "agueli@cmfc.it":        { id:"c02", name:"Alessandro Gueli",      role:"praticante" },
+  "rmangherini@cmfc.it":   { id:"c11", name:"Rebecca Mangherini",    role:"praticante" },
+  "aselvaggio@cmfc.it":    { id:"c05", name:"Antonio Selvaggio",     role:"praticante" },
+};
+
+const COLLABS = {
+  // Praticanti — ordine alfabetico per cognome
+  "c_01":{ name:"Silvia Alesso",      level:"Praticante" },
+  "c_03":{ name:"Sara Di Lucia",      level:"Praticante" },
+  "c_04":{ name:"Sara Di Rosa",       level:"Praticante" },
+  "c_02":{ name:"Alessandro Gueli",   level:"Praticante" },
+  "c_11":{ name:"Rebecca Mangherini", level:"Praticante" },
+  "c_05":{ name:"Antonio Selvaggio",  level:"Praticante" },
+  // Professionisti — ordine alfabetico per cognome
+  "c_07":{ name:"Giulia Bianciotto",  level:"Professionista" },
+  "c_09":{ name:"Andrea Moretti",     level:"Professionista" },
+  "c_10":{ name:"Alberto Perona",     level:"Professionista" },
+  "c_08":{ name:"Elena Rossi",        level:"Professionista" },
+  "c_06":{ name:"Carlotta Sebastiani",level:"Professionista" },
+};
+
+const MANAGERS_LIST = [
+  { id:"m_06", name:"Stefania Anfosso" },
+  { id:"m_01", name:"Ilenia Atzori" },
+  { id:"m_03", name:"Daniela Canensi" },
+  { id:"m_04", name:"Mariangela Incardona" },
+  { id:"m_07", name:"Ardita Lame" },
+  { id:"m_02", name:"Martina Pittavino" },
+  { id:"m_05", name:"Simona Sanità" },
+];
+
+// ════════════════════════════════════════════════════════════
+// CRITERIA
+// ════════════════════════════════════════════════════════════
+const RL = ["Insuff.","Mediocre","Adeguato","Buono","Eccel."];
+
+const CRIT_COLLAB = [
+  { area:"A", label:"Competenze tecnico-professionali", weight:.40, css:"A", criteria:[
+    { id:"A1", l:"Conoscenza normativa fiscale", d:"Correttezza applicazione TUIR, IVA, dichiarazioni fiscali" },
+    { id:"A2", l:"Conoscenza normativa contabile", d:"Applicazione OIC, redazione/revisione bilanci e nota integrativa" },
+    { id:"A3", l:"Conoscenza normativa societaria", d:"Adempimenti societari, verbali, delibere, scadenze CCIAA" },
+    { id:"A4", l:"Qualità tecnica degli elaborati", d:"Precisione, assenza di errori, conformità normativa" },
+    { id:"A5", l:"Gestione autonoma scadenze", d:"Rispetto deadlines ADE, INPS, CCIAA senza solleciti" },
+  ]},
+  { area:"B", label:"Organizzazione e affidabilità", weight:.20, css:"B", criteria:[
+    { id:"B1", l:"Puntualità e rispetto scadenze", d:"Consegna nei tempi concordati, gestione del carico" },
+    { id:"B2", l:"Precisione e completezza", d:"Documenti completi, verificati, pronti per revisione" },
+    { id:"B3", l:"Riservatezza e affidabilità", d:"Gestione dati sensibili, discrezione professionale" },
+    { id:"B4", l:"Organizzazione e gestione priorità", d:"Capacità di lavorare su più pratiche contemporaneamente" },
+  ]},
+  { area:"C", label:"Relazioni e soft skills", weight:.20, css:"C", criteria:[
+    { id:"C1", l:"Comunicazione con il cliente", d:"Chiarezza, cortesia, puntualità, tono professionale" },
+    { id:"C2", l:"Collaborazione con il team", d:"Disponibilità, supporto ai colleghi, spirito di squadra" },
+    { id:"C3", l:"Relazione con il supervisore", d:"Aggiornamento proattivo, segnalazione tempestiva criticità" },
+    { id:"C4", l:"Capacità di ricevere feedback", d:"Apertura alla critica, implementazione delle indicazioni" },
+  ]},
+  { area:"D", label:"Proattività e sviluppo", weight:.20, css:"D", criteria:[
+    { id:"D1", l:"Problem solving e autonomia", d:"Risolve problemi prima di escalare, propone soluzioni" },
+    { id:"D2", l:"Proattività e iniziativa", d:"Anticipa esigenze, propone migliorie operative" },
+    { id:"D3", l:"Aggiornamento professionale", d:"Webinar, corsi, lettura circolari normative" },
+  ]},
+];
+
+// Sezione aggiuntiva Leadership (solo per valutazione manager da parte dei partner)
+const CRIT_LEADER = [
+  { area:"L", label:"Leadership e gestione team — Sezione aggiuntiva per Manager", weight:0, css:"L", criteria:[
+    { id:"L1", l:"Gestione e sviluppo dei collaboratori", d:"Formazione on-the-job, feedback periodico, supporto alla crescita" },
+    { id:"L2", l:"Capacità di delega e controllo", d:"Delega appropriata al livello, monitoraggio senza micro-gestione" },
+    { id:"L3", l:"Decision making e responsabilità", d:"Decisioni tempestive, gestione autonoma situazioni critiche" },
+    { id:"L4", l:"Gestione dei conflitti", d:"Affrontare tensioni nel team o con clienti in modo costruttivo" },
+    { id:"L5", l:"Comunicazione verso i Partner", d:"Aggiornamento proattivo, segnalazione rischi e opportunità" },
+  ]},
+];
+
+const CRIT_SELF_MANAGER = [
+  { area:"A", label:"Competenze tecnico-professionali", weight:.25, css:"A", criteria:[
+    { id:"SA1", l:"Conoscenza e aggiornamento normativo", d:"Fiscale, contabile, societario — applicazione e trasmissione ai collaboratori" },
+    { id:"SA2", l:"Qualità elaborati prodotti/supervisionati", d:"Livello di qualità finale dei documenti firmati o revisionati" },
+    { id:"SA3", l:"Gestione autonoma scadenze critiche", d:"Rispetto calendari fiscali/societari senza escalation" },
+    { id:"SA4", l:"Revisione e controllo qualità", d:"Efficacia nell'individuare errori prima della consegna al cliente" },
+  ]},
+  { area:"B", label:"Organizzazione e affidabilità", weight:.15, css:"B", criteria:[
+    { id:"SB1", l:"Pianificazione e gestione del carico", d:"Distribuzione efficiente compiti, anticipazione dei picchi" },
+    { id:"SB2", l:"Rispetto dei tempi di consegna interni", d:"Puntualità verso Partner e clienti, gestione proattiva ritardi" },
+    { id:"SB3", l:"Riservatezza e affidabilità professionale", d:"Gestione dati sensibili, discrezione verso clienti e terzi" },
+  ]},
+  { area:"C", label:"Leadership e gestione collaboratori ★", weight:.30, css:"L", criteria:[
+    { id:"SC1", l:"Gestione e sviluppo dei collaboratori", d:"Formazione on-the-job, feedback periodico, supporto alla crescita" },
+    { id:"SC2", l:"Capacità di delega e controllo", d:"Delega appropriata al livello, monitoraggio senza micro-gestione" },
+    { id:"SC3", l:"Decision making e responsabilità", d:"Decisioni tempestive, gestione autonoma situazioni critiche" },
+    { id:"SC4", l:"Gestione dei conflitti", d:"Tensioni nel team o con clienti gestite in modo costruttivo" },
+    { id:"SC5", l:"Comunicazione verso i Partner", d:"Aggiornamento proattivo, segnalazione rischi e opportunità" },
+  ]},
+  { area:"D", label:"Relazioni e soft skills", weight:.15, css:"D", criteria:[
+    { id:"SD1", l:"Comunicazione con i clienti", d:"Chiarezza, tono professionale, gestione delle aspettative" },
+    { id:"SD2", l:"Collaborazione con Manager e Partner", d:"Spirito di squadra, condivisione know-how, supporto trasversale" },
+    { id:"SD3", l:"Apertura al feedback e adattabilità", d:"Recepisce critiche costruttive e si adatta ai cambiamenti" },
+  ]},
+  { area:"E", label:"Contributo allo Studio", weight:.15, css:"E", criteria:[
+    { id:"SE1", l:"Sviluppo della clientela", d:"Mantenimento e sviluppo clienti assegnati, cross-selling" },
+    { id:"SE2", l:"Contributo alla cultura dello Studio", d:"Trasmissione valori ai junior, partecipazione attiva" },
+    { id:"SE3", l:"Iniziativa e proposizione miglioramenti", d:"Propone soluzioni operative, processi più efficienti" },
+  ]},
+];
+
+const OPEN_EVAL = [
+  { id:"pf", l:"Punti di forza emersi nel periodo:" },
+  { id:"am", l:"Aree di miglioramento prioritarie per il prossimo anno:" },
+  { id:"fm", l:"Formazioni o percorsi di sviluppo suggeriti:" },
+];
+const OPEN_SELF = [
+  { id:"q19", l:"Principali aree di forza che intendi continuare a sviluppare:" },
+  { id:"q20", l:"Aree di miglioramento su cui ti concentrerai nel prossimo periodo:" },
+  { id:"q21", l:"Formazioni o percorsi di sviluppo più utili per la tua crescita:" },
+  { id:"q22", l:"Come pensi di contribuire maggiormente al successo dello Studio nel prossimo anno:" },
+  { id:"q23", l:"Come valuti la tua efficacia nella gestione dei collaboratori? Cosa faresti diversamente:" },
+  { id:"q24", l:"Aspetti organizzativi dello Studio da portare all'attenzione dei Partner:" },
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let S = {
+  token: null, user: null,
+  view: "login",
+  loginError: null,
+  formTarget: null, formIsManager: false,
+  ratings: {}, prevRatings: {}, notes: {}, openAnswers: {}, submitted: {},
+  inspectId: null, inspectName: null, inspectType: null,
+  splashPage: 0,
+  toast: null,
+};
+
+function loadStorage() {
+  try { const d = JSON.parse(localStorage.getItem("cmfc_v26")||"{}"); ["ratings","prevRatings","notes","openAnswers","submitted"].forEach(k=>{ if(d[k]) S[k]=d[k]; }); } catch(e){}
+}
+function saveStorage() {
+  try { localStorage.setItem("cmfc_v26", JSON.stringify({ratings:S.ratings,prevRatings:S.prevRatings,notes:S.notes,openAnswers:S.openAnswers,submitted:S.submitted})); } catch(e){}
+}
+
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function K(ev,tg,id){ return `${ev}:${tg}:${id}`; }
+function initials(n){ return n.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase(); }
+
+function areaAvg(ev,tg,crit){
+  // NV non entra nella media numerica, ma non impedisce il calcolo
+  const sc = crit.map(c=>S.ratings[K(ev,tg,c.id)]).filter(v=>v && v!=="NV").map(Number);
+  return sc.length ? sc.reduce((a,b)=>a+b,0)/sc.length : null;
+}
+function weightedScore(ev,tg,groups){
+  let tot=0, tw=0;
+  for(const g of groups){ const a=areaAvg(ev,tg,g.criteria); if(a!==null&&g.weight>0){tot+=a*g.weight;tw+=g.weight;} }
+  return tw ? tot/tw : null;
+}
+function fascia(sc){
+  if(sc===null) return null;
+  if(sc<2.5) return {l:"In crescita",c:"f-crescita"};
+  if(sc<3.5) return {l:"Adeguato",c:"f-adeguato"};
+  if(sc<4.25) return {l:"Buono",c:"f-buono"};
+  return {l:"Eccellente",c:"f-eccellente"};
+}
+function countDone(ev,tg,groups){ return groups.flatMap(g=>g.criteria).filter(c=>S.ratings[K(ev,tg,c.id)]).length; }
+function totalCrit(groups){ return groups.flatMap(g=>g.criteria).length; }
+function roleName(r){ return {partner_fondatore:"Partner Fondatore",partner:"Partner",manager:"Manager",manager_self:"Manager",professionista:"Professionista",praticante:"Praticante",admin:"Admin",master:"Partner — Accesso Master"}[r]||r; }
+function isMaster(){ return S.user && S.user.role==="master"; }
+
+function toast(msg){ S.toast=msg; render(); setTimeout(()=>{ S.toast=null; render(); },2200); }
+
+// ════════════════════════════════════════════════════════════
+// RENDER ROUTER
+// ════════════════════════════════════════════════════════════
+function render(){
+  const root = document.getElementById("root");
+  if(S.view==="splash"){ root.innerHTML = renderSplash(); attachGlobal(); return; }
+  if(S.view==="login"){ root.innerHTML = renderLogin(); attachGlobal(); return; }
+  root.innerHTML = renderShell(
+    S.view==="home"      ? renderHome()      :
+    S.view==="form"      ? renderForm()      :
+    S.view==="autoval"   ? renderAutoval()   :
+    S.view==="success"   ? renderSuccess()   :
+    S.view==="dashboard" ? renderDashboard() :
+    S.view==="master"    ? renderMaster()    :
+    S.view==="inspect"   ? renderInspect()   : ""
+  );
+  attachGlobal();
+}
+
+function renderShell(inner){
+  const u = S.user;
+  return `
+    <div class="hdr">
+      <div class="hdr-brand">CMFC · Valutazioni</div>
+      <div class="hdr-right">
+        <div class="hdr-user">${u.name}</div>
+        <button class="hdr-logout" data-a="logout">Esci</button>
+      </div>
+    </div>
+    <div class="page">${inner}</div>
+    ${S.toast?`<div class="toast">${S.toast}</div>`:""}
+  `;
+}
+
+// ════════════════════════════════════════════════════════════
+// SPLASH
+// ════════════════════════════════════════════════════════════
+const SPLASH_PAGES = [
+  {
+    quote: `Il feedback non è un giudizio.<br>È un <em>regalo</em>.`,
+    body: `Ogni valutazione che dai con cura diventa uno strumento di crescita reale per chi lavora con te. Serve solo essere onesti.`,
+    cta: "Continua →",
+  },
+  {
+    quote: `La crescita non avviene nel silenzio.<br>Avviene nel <em>confronto</em>.`,
+    body: `Questo ciclo di valutazioni serve allo Studio per riconoscere i punti di forza, investire sulle persone giuste e costruire insieme un percorso professionale che abbia senso.`,
+    cta: "Continua →",
+  },
+  {
+    quote: `Pochi minuti di riflessione oggi.<br>Un anno di direzione <em>più chiara</em>.`,
+    body: `Compila le schede con la stessa attenzione che metti nel tuo lavoro quotidiano. Le persone che valuti si aspettano da te una parola vera — non un numero.`,
+    cta: "Inizia le valutazioni",
+  },
+];
+
+function renderSplash(){
+  const p = SPLASH_PAGES[S.splashPage];
+  const isLast = S.splashPage === SPLASH_PAGES.length - 1;
+  return `
+  <div class="splash" id="splash-wrap">
+    <div class="splash-dot"></div>
+    <div class="splash-logo">Studio CMFC</div>
+    <div class="splash-sub">COMMERCIALISTI ASSOCIATI · VALUTAZIONI 2026</div>
+    <div class="splash-dots">
+      ${SPLASH_PAGES.map((_,i)=>`<div class="splash-step${i===S.splashPage?" on":""}"></div>`).join("")}
+    </div>
+    <div class="splash-quote">${p.quote}</div>
+    <div class="splash-body">${p.body}</div>
+    <button class="splash-cta" data-a="splash-next">${p.cta}</button>
+    <button class="splash-skip" data-a="splash-skip">Salta intro</button>
+  </div>`;
+}
+
+function splashNext(){
+  if(S.splashPage < SPLASH_PAGES.length - 1){
+    // Animate out, then show next page
+    const el = document.getElementById("splash-wrap");
+    if(el){ el.classList.add("splash-out"); setTimeout(()=>{ S.splashPage++; render(); },400); }
+    else { S.splashPage++; render(); }
+  } else {
+    splashDone();
+  }
+}
+function splashDone(){
+  try { localStorage.setItem("cmfc_splashSeen","1"); } catch(e){}
+  S.view="login"; render();
+}
+
+// ════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════
+function renderLogin(){
+  return `
+  <div class="center-wrap">
+    <div class="access-card" style="text-align:left;max-width:420px">
+      <div class="studio-logo">Studio CMFC</div>
+      <div class="studio-sub">Commercialisti Associati · Milano e Torino</div>
+      <div><span class="cycle-badge">Valutazioni 2025–2026</span></div>
+      ${S.loginError?`<div style="background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;text-align:center">${S.loginError}</div>`:""}
+      <div style="margin-bottom:14px">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Email CMFC</label>
+        <input id="l-email" type="email" autocomplete="email" autocapitalize="none"
+          style="width:100%;border:1.5px solid var(--g200);border-radius:var(--r);padding:12px 14px;font-size:15px;outline:none;background:var(--g50)"
+          placeholder="" value="${S.lastEmail||""}">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--g600);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Password</label>
+        <input id="l-pwd" type="password" autocomplete="current-password"
+          style="width:100%;border:1.5px solid var(--g200);border-radius:var(--r);padding:12px 14px;font-size:15px;outline:none;background:var(--g50)"
+          placeholder="••••••••">
+      </div>
+      <button data-a="do-login" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--r);padding:14px;font-size:15px;font-weight:700;cursor:pointer">
+        Accedi →
+      </button>
+      <p style="text-align:center;font-size:11px;color:var(--g400);margin-top:14px">Accesso riservato al personale CMFC</p>
+    </div>
+  </div>`;
+}
+
+function doLogin(){
+  const email = (document.getElementById("l-email") && document.getElementById("l-email").value||"").trim().toLowerCase();
+  const pwd   = (document.getElementById("l-pwd") && document.getElementById("l-pwd").value||"").trim();
+  S.lastEmail = email;
+  const userDef = USERS[email];
+  if(!userDef){ S.loginError="Email non riconosciuta. Usa la tua mail @cmfc.it"; render(); return; }
+  const expectedPwd = (userDef.role==="master") ? PWD_MASTER : (PWDS[email] || "");
+  if(pwd !== expectedPwd){ S.loginError="Password non corretta."; render(); return; }
+  S.loginError = null;
+  S.token = userDef.id;
+  S.user  = userDef;
+  S.view  = userDef.role==="master" ? "master" : "home";
+  render();
+}
+
+// ════════════════════════════════════════════════════════════
+// HOME
+// ════════════════════════════════════════════════════════════
+function renderHome(){
+  const u = S.user;
+  const tk = S.token;
+  const isManager = u.role==="manager";
+  const isPartner = u.canSeeAll;
+  const isCollab = ["professionista","praticante"].includes(u.role);
+  const isMgrSelf = u.role==="manager_self";
+
+  let tasks=[], selfTask=null;
+
+  // Valutazione collaboratori (manager + partner)
+  if(isManager || isPartner){
+    const targets = isManager ? u.collaboratori : Object.keys(COLLABS);
+    for(const tid of targets){
+      const info = COLLABS[tid]; if(!info) continue;
+      const g = CRIT_COLLAB;
+      const done = countDone(tk,tid,g), tot = totalCrit(g);
+      const sub = S.submitted[`${tk}:${tid}`];
+      tasks.push({type:"eval",tid,name:info.name,level:info.level,done,tot,sub});
+    }
+  }
+
+  // Valutazione manager (solo partner)
+  if(isPartner){
+    for(const mg of MANAGERS_LIST){
+      const g = [...CRIT_COLLAB, ...CRIT_LEADER];
+      const done = countDone(tk,mg.id,g), tot = totalCrit(g);
+      const sub = S.submitted[`${tk}:${mg.id}`];
+      tasks.push({type:"mgeval",tid:mg.id,name:mg.name,level:"Manager",done,tot,sub});
+    }
+  }
+
+  // Self-assessment (manager con token manager, professionisti, praticanti)
+  if(isManager){
+    const sg = CRIT_SELF_MANAGER;
+    const done = countDone(tk,"self",sg), tot = totalCrit(sg);
+    const sub = S.submitted[`${tk}:self`];
+    selfTask = {done,tot,sub};
+  }
+  if(isCollab){
+    const sg = CRIT_COLLAB.filter(g=>g.area!=="D").concat([{area:"D",label:"Proattività e sviluppo",weight:.20,css:"D",criteria:CRIT_COLLAB[3].criteria}]);
+    const done = countDone(tk,"self",sg), tot = totalCrit(sg);
+    const sub = S.submitted[`${tk}:self`];
+    selfTask = {done,tot,sub};
+  }
+  if(isMgrSelf){
+    const sg = CRIT_SELF_MANAGER;
+    const done = countDone(tk,"self",sg), tot = totalCrit(sg);
+    const sub = S.submitted[`${tk}:self`];
+    selfTask = {done,tot,sub};
+    tasks=[];
+  }
+
+  const allDone = [...tasks, ...(selfTask?[selfTask]:[])].reduce((s,t)=>s+t.done,0);
+  const allTot = [...tasks, ...(selfTask?[selfTask]:[])].reduce((s,t)=>s+t.tot,0);
+  const pct = allTot ? Math.round(allDone/allTot*100) : 0;
+
+  let html = `<div class="card welcome">
+    <h2>Ciao, ${u.name}</h2>
+    <p>${roleName(u.role)} · Ciclo 2025–2026</p>
+    ${allTot?`<div class="prog-wrap"><div class="prog-lbl"><span>Avanzamento</span><span>${pct}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div></div>`:""}
+  </div>`;
+
+  // Banner motivazionale (si chiude e non torna)
+  if(!S.bannerDismissed){
+    html+=`<div class="banner" id="home-banner">
+      <button class="banner-close" data-a="banner-close">×</button>
+      <div class="banner-label">Ciclo valutazioni 2025–2026</div>
+      <div class="banner-title">Il tuo feedback conta — davvero.</div>
+      <div class="banner-body">Una valutazione attenta, anche breve, è il contributo più prezioso che puoi dare alle persone che lavorano con te. Serve solo essere onesti. Grazie per prenderti questo tempo.</div>
+    </div>`;
+  }
+
+  if(isPartner){
+    html+=`<button class="btn-submit" style="margin-bottom:14px" data-a="dashboard">📊 Dashboard Partner — tutti i risultati</button>`;
+  }
+
+  if(tasks.length){
+    const evalTasks = tasks.filter(t=>t.type==="eval");
+    const mgTasks = tasks.filter(t=>t.type==="mgeval");
+    if(evalTasks.length){
+      const pratTasks = evalTasks.filter(t=>COLLABS[t.tid] && COLLABS[t.tid].level==="Praticante");
+      const profTasks = evalTasks.filter(t=>COLLABS[t.tid] && COLLABS[t.tid].level==="Professionista");
+      if(pratTasks.length){
+        html+=`<div class="sec-lbl">Praticanti da valutare</div><div class="card">`;
+        for(const t of pratTasks) html+=taskRow(t,"eval");
+        html+=`</div>`;
+      }
+      if(profTasks.length){
+        html+=`<div class="sec-lbl">Professionisti da valutare</div><div class="card">`;
+        for(const t of profTasks) html+=taskRow(t,"eval");
+        html+=`</div>`;
+      }
+    }
+    if(mgTasks.length){
+      html+=`<div class="sec-lbl">Manager da valutare</div><div class="card">`;
+      for(const t of mgTasks) html+=taskRow(t,"mgeval");
+      html+=`</div>`;
+    }
+  }
+
+  if(selfTask!==null){
+    const t=selfTask;
+    const p2=t.tot?Math.round(t.done/t.tot*100):0;
+    const badge=t.sub?`<span class="badge b-done">✓ Inviata</span>`:t.done>0?`<span class="badge b-partial">${p2}%</span>`:`<span class="badge b-todo">Da compilare</span>`;
+    html+=`<div class="sec-lbl" style="margin-top:18px">La tua autovalutazione</div>
+    <div class="card"><div class="task" data-a="autoval">
+      <div class="av av-gold">✦</div>
+      <div class="task-info"><div class="task-name">Autovalutazione 2025–2026</div><div class="task-meta">${t.done}/${t.tot} criteri</div></div>
+      <div>${badge}</div>
+    </div></div>`;
+  }
+
+  if(!tasks.length && selfTask===null){
+    html+=`<div style="text-align:center;padding:50px 20px;color:var(--g400)"><div style="font-size:38px;margin-bottom:10px">📋</div><div style="font-size:15px;font-weight:600">Nessuna scheda assegnata</div><div style="font-size:13px;margin-top:6px">Contatta la segreteria per configurare il profilo.</div></div>`;
+  }
+  return html;
+}
+
+function taskRow(t,type){
+  const p=t.tot?Math.round(t.done/t.tot*100):0;
+  const badge=t.sub?`<span class="badge b-done">✓ Inviata</span>`:t.done>0?`<span class="badge b-partial">${p}%</span>`:`<span class="badge b-todo">Da compilare</span>`;
+  const av = t.sub ? `av-green` : type==="mgeval" ? `av-gold` : `av-blue`;
+  return `<div class="task" data-a="${type==="mgeval"?"open-mgeval":"open-eval"}" data-tid="${t.tid}">
+    <div class="av ${av}">${initials(t.name)}</div>
+    <div class="task-info"><div class="task-name">${t.name}</div><div class="task-meta">${t.level} · ${t.done}/${t.tot} criteri</div></div>
+    <div>${badge}</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// FORM (valutazione collaboratore o manager)
+// ════════════════════════════════════════════════════════════
+function renderForm(){
+  const tk=S.token, tid=S.formTarget;
+  const isManager = S.formIsManager;
+  const info = isManager ? MANAGERS_LIST.find(m=>m.id===tid) : COLLABS[tid];
+  const label = isManager ? "Manager" : info && info.level||"";
+  const sub = S.submitted[`${tk}:${tid}`];
+  const groups = isManager ? [...CRIT_COLLAB, ...CRIT_LEADER] : CRIT_COLLAB;
+
+  let html=`<div class="card form-hdr">
+    <button class="back-btn" data-a="home">← Torna all'elenco</button>
+    <div class="form-title">${info && info.name||tid}</div>
+    <div class="form-sub">${label} · Valutazioni 2026</div>
+    ${sub?`<div style="margin-top:8px"><span class="badge b-done">✓ Scheda inviata</span></div>`:""}
+  </div>`;
+
+  if(sub){ return html + renderReadOnly(tk,tid,groups) + renderLockedMsg(); }
+
+  for(const g of groups){
+    html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area==="L"?"":""+g.area+" — "}${g.label}</span>${isMaster()&&g.weight>0?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
+    for(const c of g.criteria){
+      const val=S.ratings[K(tk,tid,c.id)]||0;
+      const note=S.notes[K(tk,tid,c.id)]||"";
+      html+=`<div class="crit-row">
+        <div class="crit-label">${c.l}</div>
+        <div class="crit-desc">${c.d}</div>
+        <div class="stars">
+          ${[1,2,3,4,5].map(n=>`<div class="star${val===n?" sel":""}" data-a="rate" data-cid="${c.id}" data-v="${n}" data-ev="${tk}" data-tg="${tid}"><span class="sn">${n}</span><span class="sl">${RL[n-1]}</span></div>`).join("")}
+          <div class="star-nv${val==="NV"?" sel-nv":""}" data-a="rate-nv" data-cid="${c.id}" data-ev="${tk}" data-tg="${tid}"><span class="sn">N/V</span><span class="sl">Non val.</span></div>
+        </div>
+        <div class="note-lbl">Note / esempi concreti</div>
+        <textarea class="note-ta" rows="2" data-a="note" data-cid="${c.id}" data-ev="${tk}" data-tg="${tid}" placeholder="Facoltativo...">${note}</textarea>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  const isPartnerRole = ["partner","partner_fondatore","master"].includes(S.user && S.user.role);
+  html+=`<div class="card open-card"><h3>Giudizio complessivo${isPartnerRole ? "" : ` <span style="font-size:11px;font-weight:400;color:var(--g400)">(min. 30 caratteri per campi *)</span>`}</h3>`;
+  for(const q of OPEN_EVAL) html+=`<div class="open-q"><label>${q.l}${(!isPartnerRole && ["pf","am"].includes(q.id))?" *":""}</label><textarea data-a="openans" data-qid="${q.id}" data-ev="${tk}" data-tg="${tid}" placeholder="...">${S.openAnswers[K(tk,tid,q.id)]||""}</textarea></div>`;
+  html+=`</div>`;
+
+  const sc=weightedScore(tk,tid,CRIT_COLLAB);
+  const f=fascia(sc);
+  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio (aree A–D)</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+
+  html+=`<div id="submit-err" style="display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px"></div>`;
+  html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="${tid}">✓ Invia scheda di valutazione</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
+  return html;
+}
+
+function renderLockedMsg(){
+  return `<div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;text-align:center">
+    <div style="font-size:13px;color:var(--g600)">🔒 Scheda bloccata dopo l'invio. Per richiedere una modifica scrivi a <strong>smina@cmfc.it</strong></div>
+  </div>`;
+}
+
+function renderReadOnly(ev,tg,groups){
+  let html="";
+  for(const g of groups){
+    html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.label}</span></div>`;
+    for(const c of g.criteria){
+      const val=S.ratings[K(ev,tg,c.id)];
+      const note=S.notes[K(ev,tg,c.id)]||"";
+      html+=`<div class="crit-row"><div class="crit-label">${c.l}</div><div style="font-size:20px;font-weight:800;color:var(--navy);margin:6px 0">${val==="NV"?`<span style="font-size:13px;font-weight:600;color:var(--g400)">Non valutabile</span>`:val||"—"}${val&&val!=="NV"?`<span style="font-size:12px;color:var(--g400);font-weight:400"> / 5 — ${RL[val-1]}</span>`:""}</div>${note?`<div style="font-size:12px;color:var(--g600);font-style:italic">${note}</div>`:""}</div>`;
+    }
+    html+=`</div>`;
+  }
+  const sc=weightedScore(ev,tg,groups.filter(g=>g.weight>0));
+  const f=fascia(sc);
+  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato finale</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// AUTOVALUTAZIONE
+// ════════════════════════════════════════════════════════════
+function renderAutoval(){
+  const tk=S.token, u=S.user;
+  const isManager = ["manager","manager_self"].includes(u.role);
+  const groups = isManager ? CRIT_SELF_MANAGER : CRIT_COLLAB;
+  const openQs = isManager ? OPEN_SELF : OPEN_SELF.filter(q=>q.id!=="q23");
+  const sub = S.submitted[`${tk}:self`];
+
+  let html=`<div class="card form-hdr">
+    <button class="back-btn" data-a="home">← Torna all'elenco</button>
+    <div class="form-title">Autovalutazione 2025–2026</div>
+    <div class="form-sub">${u.name} · ${roleName(u.role)}</div>
+    ${sub?`<div style="margin-top:8px"><span class="badge b-done">✓ Inviata</span></div>`:""}
+  </div>`;
+
+  if(sub){ return html + renderReadOnly(tk,"self",groups) + renderLockedMsg(); }
+
+  for(const g of groups){
+    html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area} — ${g.label}</span>${isMaster()?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
+    for(const c of g.criteria){
+      const val=S.ratings[K(tk,"self",c.id)]||0;
+      const note=S.notes[K(tk,"self",c.id)]||"";
+      html+=`<div class="crit-row">
+        <div class="crit-label">${c.l}</div>
+        <div class="crit-desc">${c.d}</div>
+        <div class="stars">
+          ${[1,2,3,4,5].map(n=>`<div class="star${val===n?" sel":""}" data-a="rate" data-cid="${c.id}" data-v="${n}" data-ev="${tk}" data-tg="self"><span class="sn">${n}</span><span class="sl">${RL[n-1]}</span></div>`).join("")}
+          <div class="star-nv${val==="NV"?" sel-nv":""}" data-a="rate-nv" data-cid="${c.id}" data-ev="${tk}" data-tg="self"><span class="sn">N/V</span><span class="sl">Non val.</span></div>
+        </div>
+        <div class="note-lbl">Riflessioni / esempi</div>
+        <textarea class="note-ta" rows="2" data-a="note" data-cid="${c.id}" data-ev="${tk}" data-tg="self" placeholder="Facoltativo...">${note}</textarea>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  html+=`<div class="card open-card"><h3>Obiettivi e sviluppo futuro <span style="font-size:11px;font-weight:400;color:var(--g400)">(min. 30 caratteri per campi *)</span></h3>`;
+  for(const q of openQs) html+=`<div class="open-q"><label>${q.l}${["q19","q20","q22"].includes(q.id)?" *":""}</label><textarea data-a="openans" data-qid="${q.id}" data-ev="${tk}" data-tg="self" placeholder="...">${S.openAnswers[K(tk,"self",q.id)]||""}</textarea></div>`;
+  html+=`</div>`;
+
+  const sc=weightedScore(tk,"self",groups);
+  const f=fascia(sc);
+  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+
+  html+=`<div id="submit-err" style="display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px"></div>`;
+  html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="self">✓ Invia autovalutazione</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// NV MODAL
+// ════════════════════════════════════════════════════════════
+function renderNVModal(cid, ev, tg){
+  return `<div class="modal-backdrop" id="nv-modal">
+    <div class="modal-box">
+      <div class="modal-icon">💡</div>
+      <div class="modal-title">Sei sicuro di non avere niente da condividere?</div>
+      <div class="modal-body">
+        Anche una valutazione <strong>parziale o sintetica</strong> è preziosa per questa persona.<br><br>
+        Il feedback — anche breve — aiuta il collaboratore a capire dove sta andando bene e dove può crescere. Spesso è l'unico momento strutturato in cui riceve un riscontro professionale.<br><br>
+        Se hai avuto poche interazioni, puoi segnalarlo nelle note e assegnare comunque un giudizio indicativo.
+      </div>
+      <div class="modal-actions">
+        <button class="modal-confirm" data-a="nv-confirm" data-cid="${cid}" data-ev="${ev}" data-tg="${tg}">Sì, non valutabile</button>
+        <button class="modal-cancel" data-a="nv-cancel">← Torna a valutare</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// SUCCESS
+// ════════════════════════════════════════════════════════════
+function renderSuccess(){
+  return `<div class="card success-wrap"><div class="success-icon">✅</div><div class="success-title">Scheda inviata</div><div class="success-sub">I dati sono salvati su questo dispositivo. Puoi tornare all'elenco per compilare le altre schede.</div><button class="btn-home" data-a="home">← Torna all'elenco</button></div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const allTk = Object.keys(USERS);
+  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore"].includes(USERS[k].role));
+  const collabIds = Object.keys(COLLABS);
+
+  function aggScore(tid, groups){
+    const scores=[];
+    for(const etk of evalTks){
+      if(!S.submitted[`${etk}:${tid}`]) continue;
+      const s=weightedScore(etk,tid,groups.filter(g=>g.weight>0));
+      if(s!==null) scores.push(s);
+    }
+    return scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : null;
+  }
+  function aggArea(tid,area){
+    const scores=[];
+    for(const etk of evalTks){
+      if(!S.submitted[`${etk}:${tid}`]) continue;
+      const g=CRIT_COLLAB.find(x=>x.area===area); if(!g) continue;
+      const a=areaAvg(etk,tid,g.criteria);
+      if(a!==null) scores.push(a);
+    }
+    return scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : null;
+  }
+
+  const subCount = collabIds.filter(tid=>evalTks.some(etk=>S.submitted[`${etk}:${tid}`])).length;
+  const pendCount = collabIds.length - subCount;
+  const mgSubCount = MANAGERS_LIST.filter(m=>evalTks.some(etk=>S.submitted[`${etk}:${m.id}`])).length;
+  const selfCount = allTk.filter(k=>S.submitted[`${k}:self`]).length;
+
+  let html=`<div class="dash-hdr">
+    <h2>Dashboard Partner</h2>
+    <button class="export-btn" data-a="export">⬇ Esporta CSV</button>
+    <button class="back-btn" data-a="${isMaster()?'master':'home'}" style="margin:0">← Home</button>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-c"><div class="stat-n">${subCount}</div><div class="stat-l">Schede collab.</div></div>
+    <div class="stat-c"><div class="stat-n">${mgSubCount}</div><div class="stat-l">Schede manager</div></div>
+    <div class="stat-c"><div class="stat-n">${selfCount}</div><div class="stat-l">Autovalutaz.</div></div>
+  </div>`;
+
+  // Helper per una tabella per gruppo
+  function collabTable(ids, label){
+    if(!ids.length) return "";
+    let t=`<div class="sec-lbl">${label}</div><div class="tbl-wrap"><div class="tbl-hdr">
+      <div class="th" style="text-align:left">Nome</div>
+      <div class="th">A</div><div class="th">B</div><div class="th">C</div><div class="th">D</div>
+      <div class="th">Score</div><div class="th">Fascia</div>
+    </div>`;
+    for(const tid of ids){
+      const info=COLLABS[tid];
+      const evCount=evalTks.filter(etk=>S.submitted[`${etk}:${tid}`]).length;
+      const [aA,aB,aC,aD]=["A","B","C","D"].map(a=>aggArea(tid,a));
+      const sc=aggScore(tid,CRIT_COLLAB);
+      const f=fascia(sc);
+      t+=`<div class="tbl-row">
+        <div><div class="tc-name">${info.name}</div><div class="tc-level">${evCount} valutaz.</div></div>
+        ${[aA,aB,aC,aD].map(a=>`<div class="${a!==null?"tc-score":"tc-empty"}">${a!==null?a.toFixed(1):"—"}</div>`).join("")}
+        <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?sc.toFixed(2):"—"}</div>
+        <div class="tc-fascia">${f?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:3px 8px">${f.l}</span>`:"—"}</div>
+      </div>`;
+    }
+    return t+`</div>`;
+  }
+
+  const pratIds = collabIds.filter(id=>COLLABS[id].level==="Praticante");
+  const profIds = collabIds.filter(id=>COLLABS[id].level==="Professionista");
+  html += collabTable(pratIds, "Praticanti");
+  html += collabTable(profIds, "Professionisti");
+
+  // Table manager
+  html+=`<div class="sec-lbl">Manager</div>
+  <div class="tbl-wrap">
+    <div class="tbl-hdr">
+      <div class="th" style="text-align:left">Nome</div>
+      <div class="th">A</div><div class="th">B</div><div class="th">C</div><div class="th">D</div>
+      <div class="th">Score</div><div class="th">Fascia</div>
+    </div>`;
+  for(const mg of MANAGERS_LIST){
+    const evCount=evalTks.filter(etk=>S.submitted[`${etk}:${mg.id}`]).length;
+    const [aA,aB,aC,aD]=["A","B","C","D"].map(area=>{
+      const scores=[];
+      for(const etk of evalTks){
+        if(!S.submitted[`${etk}:${mg.id}`]) continue;
+        const g=CRIT_COLLAB.find(x=>x.area===area); if(!g) continue;
+        const a=areaAvg(etk,mg.id,g.criteria);
+        if(a!==null) scores.push(a);
+      }
+      return scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:null;
+    });
+    const sc=aggScore(mg.id,[...CRIT_COLLAB,...CRIT_LEADER]);
+    const f=fascia(sc);
+    html+=`<div class="tbl-row">
+      <div><div class="tc-name">${mg.name}</div><div class="tc-level">Manager · ${evCount} valutaz.</div></div>
+      ${[aA,aB,aC,aD].map(a=>`<div class="${a!==null?"tc-score":"tc-empty"}">${a!==null?a.toFixed(1):"—"}</div>`).join("")}
+      <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?sc.toFixed(2):"—"}</div>
+      <div class="tc-fascia">${f?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:3px 8px">${f.l}</span>`:"—"}</div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  // Self-assessments
+  const selfDone = allTk.filter(k=>S.submitted[`${k}:self`]);
+  if(selfDone.length){
+    html+=`<div class="sec-lbl">Autovalutazioni inviate</div><div class="tbl-wrap">
+      <div class="tbl-hdr"><div class="th" style="text-align:left">Persona</div><div class="th">A</div><div class="th">B</div><div class="th">C/L</div><div class="th">D/E</div><div class="th">Score</div><div class="th">Fascia</div></div>`;
+    for(const stk of selfDone){
+      const su=USERS[stk];
+      const isM=["manager","manager_self"].includes(su.role);
+      const sg=isM?CRIT_SELF_MANAGER:CRIT_COLLAB;
+      const areas=["A","B","C","D"].map(a=>{
+        const g=sg.find(x=>x.area===a); if(!g) return null;
+        return areaAvg(stk,"self",g.criteria);
+      });
+      const sc=weightedScore(stk,"self",sg);
+      const f=fascia(sc);
+      html+=`<div class="tbl-row">
+        <div><div class="tc-name">${su.name}</div><div class="tc-level">${roleName(su.role)}</div></div>
+        ${areas.map(a=>`<div class="${a!==null?"tc-score":"tc-empty"}">${a!==null?a.toFixed(1):"—"}</div>`).join("")}
+        <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?sc.toFixed(2):"—"}</div>
+        <div class="tc-fascia">${f?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:3px 8px">${f.l}</span>`:"—"}</div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// MASTER VIEW
+// ════════════════════════════════════════════════════════════
+function renderMaster(){
+  const allTk = Object.keys(USERS);
+  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore","master"].includes(USERS[k].role));
+  const collabIds = Object.keys(COLLABS);
+
+  function aggScore(tid,groups){
+    const scores=[];
+    for(const etk of evalTks){
+      if(!S.submitted[`${etk}:${tid}`]) continue;
+      const s=weightedScore(etk,tid,groups.filter(g=>g.weight>0));
+      if(s!==null) scores.push(s);
+    }
+    return scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:null;
+  }
+
+  const subCollab = collabIds.filter(tid=>evalTks.some(etk=>S.submitted[`${etk}:${tid}`])).length;
+  const subMgr = MANAGERS_LIST.filter(m=>evalTks.some(etk=>S.submitted[`${etk}:${m.id}`])).length;
+  const selfCount = allTk.filter(k=>S.submitted[`${k}:self`]).length;
+  const totalForms = collabIds.length + MANAGERS_LIST.length;
+  const totalSelf = allTk.filter(k=>!["admin","master"].includes(USERS[k].role)).length;
+
+  let html=`
+  <div style="background:var(--navy);border-radius:var(--r);padding:18px 20px;margin-bottom:18px;color:#fff;border-left:4px solid var(--teal)">
+    <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Accesso Master</div>
+    <div style="font-size:18px;font-weight:700">CMFC · Valutazioni 2025–2026</div>
+    <div style="font-size:13px;opacity:.7;margin-top:3px">Visibilità completa — tutte le schede, tutti i link</div>
+  </div>
+
+  <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-c"><div class="stat-n">${subCollab}/${collabIds.length}</div><div class="stat-l">Schede collab.</div></div>
+    <div class="stat-c"><div class="stat-n">${subMgr}/${MANAGERS_LIST.length}</div><div class="stat-l">Schede manager</div></div>
+    <div class="stat-c"><div class="stat-n">${selfCount}/${totalSelf}</div><div class="stat-l">Autovalutaz.</div></div>
+    <div class="stat-c"><div class="stat-n" style="font-size:18px">${Math.round((subCollab+subMgr+selfCount)/(totalForms+totalSelf)*100)}%</div><div class="stat-l">Completamento</div></div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+    <button class="btn-submit" style="flex:1;min-width:140px" data-a="dashboard">📊 Dashboard aggregata</button>
+    <button class="export-btn" data-a="export" style="flex:1;min-width:120px">⬇ Esporta CSV</button>
+  </div>
+
+  <details style="margin-bottom:20px">
+    <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.8px;padding:10px 0;user-select:none">🔑 Credenziali accesso — solo visibili da qui</summary>
+    <div class="tbl-wrap" style="margin-top:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 100px;padding:10px 12px;background:var(--navy);gap:8px">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.4px">Nome</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.4px">Email</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.4px">Password</div>
+      </div>
+      ${Object.entries(USERS).filter(([e,u])=>u.role!=="master").map(([email,u],i)=>`
+      <div style="display:grid;grid-template-columns:1fr 1fr 100px;padding:10px 12px;border-bottom:1px solid var(--g100);gap:8px;background:${i%2===0?'var(--g50)':'#fff'}">
+        <div style="font-size:13px;font-weight:600;color:var(--g800)">${u.name}</div>
+        <div style="font-size:12px;color:var(--g600)">${email}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--teal-dark);font-family:monospace">${PWDS[email]||"—"}</div>
+      </div>`).join("")}
+      <div style="display:grid;grid-template-columns:1fr 1fr 100px;padding:10px 12px;gap:8px;background:var(--navy);border-top:2px solid var(--teal)">
+        <div style="font-size:13px;font-weight:700;color:#fff">Vista Master</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.6)">partners@cmfc.it</div>
+        <div style="font-size:13px;font-weight:700;color:var(--teal);font-family:monospace">${PWD_MASTER}</div>
+      </div>
+    </div>
+  </details>`;
+
+  // ── Riepilogo schede per persona ──
+  function masterCollabTable(entries, label){
+    if(!entries.length) return "";
+    let t=`<div class="sec-lbl">${label}</div><div class="tbl-wrap">
+      <div class="tbl-hdr" style="grid-template-columns:1fr 90px 90px 80px">
+        <div class="th" style="text-align:left">Nome</div>
+        <div class="th">Schede ricevute</div>
+        <div class="th">Score agg.</div>
+        <div class="th">Dettaglio</div>
+      </div>`;
+    for(const [cid,ci] of entries){
+      const done = evalTks.filter(etk=>S.submitted[`${etk}:${cid}`]).length;
+      const sc = aggScore(cid,CRIT_COLLAB);
+      const f = fascia(sc);
+      t+=`<div class="tbl-row" style="grid-template-columns:1fr 90px 90px 80px">
+        <div><div class="tc-name">${ci.name}</div></div>
+        <div class="tc-score">${done} / ${evalTks.length}</div>
+        <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:2px 7px">${sc.toFixed(2)}</span>`:"—"}</div>
+        <div style="text-align:center;display:flex;gap:4px;justify-content:center">
+          <button class="copy-btn" data-a="inspect" data-itype="collab" data-iid="${cid}" data-iname="${ci.name}">Vedi</button>
+        </div>
+      </div>`;
+    }
+    return t+`</div>`;
+  }
+  const pratEntries = Object.entries(COLLABS).filter(([,ci])=>ci.level==="Praticante");
+  const profEntries = Object.entries(COLLABS).filter(([,ci])=>ci.level==="Professionista");
+  html += masterCollabTable(pratEntries, "Stato schede — praticanti");
+  html += masterCollabTable(profEntries, "Stato schede — professionisti");
+
+  html+=`<div class="sec-lbl" style="margin-top:16px">Stato schede — manager</div><div class="tbl-wrap">
+    <div class="tbl-hdr" style="grid-template-columns:1fr 90px 90px 80px">
+      <div class="th" style="text-align:left">Nome</div>
+      <div class="th">Schede ricevute</div>
+      <div class="th">Score agg.</div>
+      <div class="th">Dettaglio</div>
+    </div>`;
+  for(const mg of MANAGERS_LIST){
+    const done = evalTks.filter(etk=>S.submitted[`${etk}:${mg.id}`]).length;
+    const sc = aggScore(mg.id,[...CRIT_COLLAB,...CRIT_LEADER]);
+    const f = fascia(sc);
+    const selfSub = allTk.find(k=>S.submitted[`${k}:self`]&&USERS[k].name===mg.name&&["manager","manager_self"].includes(USERS[k].role));
+    html+=`<div class="tbl-row" style="grid-template-columns:1fr 90px 90px 80px">
+      <div><div class="tc-name">${mg.name}</div><div class="tc-level">Manager${selfSub?" · autoval. ✓":""}</div></div>
+      <div class="tc-score">${done} / ${evalTks.length}</div>
+      <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:2px 7px">${sc.toFixed(2)}</span>`:"—"}</div>
+      <div style="text-align:center"><button class="copy-btn" data-a="inspect" data-itype="mgr" data-iid="${mg.id}" data-iname="${mg.name}">Vedi</button></div>
+    </div>`;
+  }
+  html+=`</div>`;
+
+  // ── Sblocco schede ──
+  const allSubmitted = [];
+  for(const etk of evalTks){
+    const eu = USERS[etk]; if(!eu) continue;
+    for(const [cid,ci] of Object.entries(COLLABS)){
+      if(S.submitted[`${etk}:${cid}`]) allSubmitted.push({etk, eid:eu.id, ename:eu.name, tid:cid, tname:ci.name, key:`${eu.id}:${cid}`});
+    }
+    for(const mg of MANAGERS_LIST){
+      if(S.submitted[`${etk}:${mg.id}`]) allSubmitted.push({etk, eid:eu.id, ename:eu.name, tid:mg.id, tname:mg.name, key:`${eu.id}:${mg.id}`});
+    }
+    if(S.submitted[`${etk}:self`]) allSubmitted.push({etk, eid:eu.id, ename:eu.name, tid:"self", tname:"Autovalutazione", key:`${eu.id}:self`});
+  }
+  // autovalutazioni di collab/praticanti
+  Object.keys(USERS).filter(k=>["professionista","praticante"].includes(USERS[k].role)).forEach(k=>{
+    const u=USERS[k];
+    if(S.submitted[`${u.id}:self`]) allSubmitted.push({etk:k, eid:u.id, ename:u.name, tid:"self", tname:"Autovalutazione", key:`${u.id}:self`});
+  });
+
+  if(allSubmitted.length){
+    html+=`<div class="sec-lbl" style="margin-top:20px">Sblocco schede inviate</div>
+    <div class="tbl-wrap"><div class="tbl-hdr" style="grid-template-columns:1fr 1fr 80px">
+      <div class="th" style="text-align:left">Valutatore</div>
+      <div class="th" style="text-align:left">Scheda</div>
+      <div class="th">Azione</div>
+    </div>`;
+    for(const s of allSubmitted){
+      html+=`<div class="tbl-row" style="grid-template-columns:1fr 1fr 80px">
+        <div class="tc-name">${s.ename}</div>
+        <div style="font-size:12px;color:var(--g600)">${s.tname}</div>
+        <div style="text-align:center"><button class="copy-btn" style="background:var(--red-bg);color:var(--red)" data-a="unlock" data-key="${s.key}">Sblocca</button></div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  return html;
+} — dettaglio scheda per singola persona (da master)
+// ════════════════════════════════════════════════════════════
+function renderInspect(){
+  const {inspectId:tid, inspectName:tname, inspectType:itype} = S;
+  const allTk = Object.keys(USERS);
+  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore","master"].includes(USERS[k].role));
+  const groups = itype==="mgr" ? [...CRIT_COLLAB,...CRIT_LEADER] : CRIT_COLLAB;
+  const submittedEvals = evalTks.filter(etk=>S.submitted[`${etk}:${tid}`]);
+
+  let html=`<div class="card form-hdr">
+    <button class="back-btn" data-a="master">← Torna alla vista master</button>
+    <div class="form-title">${tname}</div>
+    <div class="form-sub">${itype==="mgr"?"Manager":"Collaboratore/Professionista"} · ${submittedEvals.length} schede ricevute</div>
+  </div>`;
+
+  if(!submittedEvals.length){
+    html+=`<div style="text-align:center;padding:40px;color:var(--g400)">Nessuna scheda ancora inviata per questa persona.</div>`;
+    return html;
+  }
+
+  // Per ogni area, mostra media + dettaglio per valutatore
+  for(const g of groups){
+    html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area==="L"?"":g.area+" — "}${g.label}</span>${g.weight>0?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
+    for(const c of g.criteria){
+      const vals = submittedEvals.map(etk=>({name:USERS[etk].name, v:S.ratings[K(etk,tid,c.id)], note:S.notes[K(etk,tid,c.id)]||""})).filter(x=>x.v);
+      const avg = vals.length ? (vals.reduce((s,x)=>s+x.v,0)/vals.length) : null;
+      html+=`<div class="crit-row">
+        <div class="crit-label">${c.l}</div>
+        ${avg!==null?`<div style="font-size:13px;color:var(--g600);margin-bottom:8px">Media: <strong style="color:var(--navy);font-size:16px">${avg.toFixed(1)}</strong> / 5 su ${vals.length} valutaz.</div>`:""}
+        ${vals.map(x=>`<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;padding:6px 10px;background:var(--g50);border-radius:6px">
+          <div style="flex-shrink:0"><span style="font-size:10px;font-weight:700;color:var(--g400);text-transform:uppercase">${x.name}</span></div>
+          <div style="flex:1">
+            <span style="font-size:16px;font-weight:800;color:var(--navy)">${x.v}</span><span style="font-size:11px;color:var(--g400)"> / 5 — ${RL[x.v-1]}</span>
+            ${x.note?`<div style="font-size:12px;color:var(--g600);margin-top:3px;font-style:italic">${x.note}</div>`:""}
+          </div>
+        </div>`).join("")}
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  // Score per valutatore
+  html+=`<div class="card open-card"><h3>Punteggi ponderati per valutatore</h3>`;
+  for(const etk of submittedEvals){
+    const sc = weightedScore(etk,tid,groups.filter(g=>g.weight>0));
+    const f = fascia(sc);
+    html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--g100)">
+      <div><div style="font-size:14px;font-weight:600">${USERS[etk].name}</div><div style="font-size:12px;color:var(--g400)">${roleName(USERS[etk].role)}</div></div>
+      <div style="text-align:right">${sc!==null?`<span style="font-size:20px;font-weight:800;color:var(--navy)">${sc.toFixed(2)}</span><span style="font-size:12px;color:var(--g400)"> / 5</span><br><span class="fascia-pill ${f.c}" style="font-size:11px;padding:2px 8px">${f.l}</span>`:"—"}</div>
+    </div>`;
+  }
+
+  // Commenti aperti per valutatore
+  const hasOpen = submittedEvals.some(etk=>OPEN_EVAL.some(q=>S.openAnswers[K(etk,tid,q.id)]));
+  if(hasOpen){
+    html+=`<div style="margin-top:16px"><div style="font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Giudizi qualitativi</div>`;
+    for(const etk of submittedEvals){
+      const answers = OPEN_EVAL.map(q=>({l:q.l,v:S.openAnswers[K(etk,tid,q.id)]||""})).filter(x=>x.v);
+      if(!answers.length) continue;
+      html+=`<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">${USERS[etk].name}</div>`;
+      for(const a of answers) html+=`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--g400);margin-bottom:2px">${a.l}</div><div style="font-size:13px;color:var(--g800);line-height:1.5">${a.v}</div></div>`;
+      html+=`</div>`;
+    }
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// EXPORT CSV
+// ════════════════════════════════════════════════════════════
+function exportCSV(){
+  const evalTks=Object.keys(USERS).filter(k=>["manager","partner","partner_fondatore"].includes(USERS[k].role));
+  let rows=[["Valutatore","Ruolo Valutatore","Soggetto Valutato","Livello","Area","Criterio","Punteggio","Anno Prec.","Note"].join(";")];
+  const targets=[...Object.entries(COLLABS).map(([id,i])=>({id,name:i.name,level:i.level,groups:CRIT_COLLAB})),
+    ...MANAGERS_LIST.map(m=>({id:m.id,name:m.name,level:"Manager",groups:[...CRIT_COLLAB,...CRIT_LEADER]}))];
+  for(const {id:tid,name:tname,level,groups} of targets){
+    for(const etk of evalTks){
+      if(!S.submitted[`${etk}:${tid}`]) continue;
+      const eu=USERS[etk];
+      for(const g of groups){
+        for(const c of g.criteria){
+          const key=K(etk,tid,c.id);
+          rows.push([eu.name,roleName(eu.role),tname,level,g.label,c.l,S.ratings[key]||"",S.prevRatings[key]||"",(S.notes[key]||"").replace(/;/g,":")].join(";"));
+        }
+      }
+    }
+  }
+  const blob=new Blob(["\uFEFF"+rows.join("\n")],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="CMFC_Valutazioni_2026.csv";a.click();URL.revokeObjectURL(url);
+}
+
+// ════════════════════════════════════════════════════════════
+// EVENTS
+// ════════════════════════════════════════════════════════════
+function onClick(e){
+  const el=e.target.closest("[data-a]"); if(!el) return;
+  const a=el.dataset.a;
+  if(a==="splash-next"){ splashNext(); return; }
+  if(a==="splash-skip"){ splashDone(); return; }
+  if(a==="banner-close"){ S.bannerDismissed=true; var _hb=document.getElementById("home-banner"); if(_hb) _hb.remove(); return; }
+  if(a==="do-login"){ doLogin(); return; }
+  if(a==="logout"){ S.user=null; S.token=null; S.view="login"; S.loginError=null; render(); return; }
+  if(a==="home"){ S.view = isMaster() ? "master" : "home"; render(); window.scrollTo(0,0); return; }
+  if(a==="master"){ S.view="master"; render(); window.scrollTo(0,0); return; }
+  if(a==="dashboard"){ S.view="dashboard"; render(); window.scrollTo(0,0); return; }
+  if(a==="autoval"){ S.view="autoval"; render(); window.scrollTo(0,0); return; }
+  if(a==="inspect"){
+    S.inspectId=el.dataset.iid; S.inspectName=el.dataset.iname; S.inspectType=el.dataset.itype;
+    S.view="inspect"; render(); window.scrollTo(0,0); return;
+  }
+  if(a==="open-eval"){ S.formTarget=el.dataset.tid; S.formIsManager=false; S.view="form"; render(); window.scrollTo(0,0); return; }
+  if(a==="open-mgeval"){ S.formTarget=el.dataset.tid; S.formIsManager=true; S.view="form"; render(); window.scrollTo(0,0); return; }
+  if(a==="rate-nv"){
+    // Show modal before confirming NV
+    const modal = document.createElement("div");
+    modal.innerHTML = renderNVModal(el.dataset.cid, el.dataset.ev, el.dataset.tg);
+    document.body.appendChild(modal.firstElementChild);
+    return;
+  }
+  if(a==="nv-cancel"){
+    var _nm=document.getElementById("nv-modal"); if(_nm) _nm.remove();
+    return;
+  }
+  if(a==="nv-confirm"){
+    var _nm=document.getElementById("nv-modal"); if(_nm) _nm.remove();
+    const key=K(el.dataset.ev,el.dataset.tg,el.dataset.cid);
+    S.ratings[key]="NV";
+    saveStorage();
+    // Update star display: deselect numbers, highlight NV
+    const starsWrapEl = document.querySelector(`.star-nv[data-cid="${el.dataset.cid}"]`);
+    const starsWrap = starsWrapEl ? starsWrapEl.closest(".stars") : null;
+    if(starsWrap){
+      starsWrap.querySelectorAll(".star").forEach(s=>s.classList.remove("sel"));
+      var nvBtn = starsWrap.querySelector(".star-nv"); if(nvBtn) nvBtn.classList.add("sel-nv");
+    }
+    return;
+  }
+  if(a==="rate"){
+    const key=K(el.dataset.ev,el.dataset.tg,el.dataset.cid);
+    const newVal=parseInt(el.dataset.v);
+    const curVal=S.ratings[key];
+    if(curVal===newVal){ delete S.ratings[key]; saveStorage(); el.closest(".stars").querySelectorAll(".star,.star-nv").forEach(s=>s.classList.remove("sel","sel-nv")); }
+    else {
+      S.ratings[key]=newVal; saveStorage();
+      el.closest(".stars").querySelectorAll(".star").forEach(s=>s.classList.toggle("sel",parseInt(s.dataset.v)===newVal));
+      var nvBtn2 = el.closest(".stars").querySelector(".star-nv"); if(nvBtn2) nvBtn2.classList.remove("sel-nv");
+    }
+    return;
+  }
+  if(a==="submit"){
+    const ev=el.dataset.ev, tg=el.dataset.tg;
+    const isPartnerRole = ["partner","partner_fondatore","master"].includes(S.user && S.user.role);
+    const isSelf = tg==="self";
+    const isMgrEval = S.formIsManager;
+    const groups = isMgrEval ? [...CRIT_COLLAB,...CRIT_LEADER] : (isSelf ? (["manager","master"].includes(S.user && S.user.role)?CRIT_SELF_MANAGER:CRIT_COLLAB) : CRIT_COLLAB);
+    const allCrit = groups.flatMap(g=>g.criteria);
+    const missing = allCrit.filter(c=>!S.ratings[K(ev,tg,c.id)]); // NV è truthy, conta come risposto
+    // Partner e fondatori: commento facoltativo. Manager e collaboratori: obbligatorio
+    const reqOpen = isPartnerRole ? [] : (isSelf ? ["q19","q20","q22"] : ["pf","am"]);
+    const shortOpen = reqOpen.filter(qid=>(S.openAnswers[K(ev,tg,qid)]||"").trim().length < 30);
+    const errEl = document.getElementById("submit-err");
+    if(missing.length || shortOpen.length){
+      const msgs=[];
+      if(missing.length) msgs.push(`${missing.length} criteri senza voto (es. "${missing[0].l}")`);
+      if(shortOpen.length) msgs.push(`${shortOpen.length} campo/i del giudizio finale troppo brevi (min. 30 caratteri)`);
+      if(errEl){ errEl.style.display="block"; errEl.textContent="⚠ Non è possibile inviare: "+msgs.join(" · "); errEl.scrollIntoView({behavior:"smooth",block:"center"}); }
+      return;
+    }
+    if(errEl) errEl.style.display="none";
+    S.submitted[`${ev}:${tg}`]=true;
+    saveStorage(); S.view="success"; render(); window.scrollTo(0,0); return;
+  }
+  if(a==="unlock"){
+    const key = el.dataset.key;
+    delete S.submitted[key];
+    saveStorage();
+    toast("🔓 Scheda sbloccata");
+    render();
+    return;
+  }
+  if(a==="export"){ exportCSV(); return; }
+}
+function onChange(e){
+  const el=e.target.closest("[data-a]"); if(!el) return;
+  if(el.dataset.a==="prev"){ S.prevRatings[K(el.dataset.ev,el.dataset.tg,el.dataset.cid)]=el.value; saveStorage(); }
+}
+function onInput(e){
+  const el=e.target.closest("[data-a]"); if(!el) return;
+  if(el.dataset.a==="note"){ S.notes[K(el.dataset.ev,el.dataset.tg,el.dataset.cid)]=el.value; saveStorage(); }
+  if(el.dataset.a==="openans"){ S.openAnswers[K(el.dataset.ev,el.dataset.tg,el.dataset.qid)]=el.value; saveStorage(); }
+}
+
+// ════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════
+function attachLoginKeys(){
+  const pwd = document.getElementById("l-pwd");
+  if(pwd) pwd.addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+  const email = document.getElementById("l-email");
+  if(email) email.addEventListener("keydown", e=>{ if(e.key==="Enter"){ var p=document.getElementById("l-pwd"); if(p) p.focus(); } });
+}
+function attachGlobal(){
+  document.removeEventListener("click",onClick);
+  document.removeEventListener("change",onChange);
+  document.removeEventListener("input",onInput);
+  document.addEventListener("click",onClick);
+  document.addEventListener("change",onChange);
+  document.addEventListener("input",onInput);
+  if(S.view==="login") attachLoginKeys();
+}
+loadStorage();
+const splashSeen = localStorage.getItem("cmfc_splashSeen");
+S.view = splashSeen ? "login" : "splash";
+S.splashPage = 0;
+render();
+</script>
+</body>
+</html>
