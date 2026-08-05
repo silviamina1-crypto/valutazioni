@@ -458,11 +458,73 @@ let S = {
   toast: null,
 };
 
-function loadStorage() {
-  try { const d = JSON.parse(localStorage.getItem("cmfc_v26")||"{}"); ["ratings","prevRatings","notes","openAnswers","submitted"].forEach(k=>{ if(d[k]) S[k]=d[k]; }); } catch(e){}
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyX059bOb7yzCIvwICfvhEk3FGGYL_UwoPe2s876XFAcdczcCu0mKUPq0VKdcF0UDsoCg/exec";
+
+function getPayload(){
+  return {ratings:S.ratings, notes:S.notes, openAnswers:S.openAnswers, submitted:S.submitted};
 }
-function saveStorage() {
-  try { localStorage.setItem("cmfc_v26", JSON.stringify({ratings:S.ratings,prevRatings:S.prevRatings,notes:S.notes,openAnswers:S.openAnswers,submitted:S.submitted})); } catch(e){}
+
+function saveStorage(){
+  // Salva sempre su Sheets (unico archivio)
+  if(!S.token) return;
+  try {
+    fetch(SHEETS_URL, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({action:"save", userId:S.token, payload:getPayload()})
+    });
+  } catch(e){}
+  // Backup locale per continuità offline
+  try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
+}
+
+function loadStorage(callback){
+  if(!S.token){ callback(); return; }
+  // Prima carica da locale (immediato), poi aggiorna da Sheets
+  try {
+    var local = JSON.parse(localStorage.getItem("cmfc_"+S.token)||"{}");
+    if(local.ratings) S.ratings = local.ratings;
+    if(local.notes) S.notes = local.notes;
+    if(local.openAnswers) S.openAnswers = local.openAnswers;
+    if(local.submitted) S.submitted = local.submitted;
+  } catch(e){}
+  // Poi aggiorna da Sheets
+  fetch(SHEETS_URL+"?userId="+S.token)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.status==="ok" && data.data){
+        var d = data.data;
+        if(d.ratings) S.ratings = d.ratings;
+        if(d.notes) S.notes = d.notes;
+        if(d.openAnswers) S.openAnswers = d.openAnswers;
+        if(d.submitted) S.submitted = d.submitted;
+        try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
+      }
+      callback();
+    })
+    .catch(function(){ callback(); });
+}
+
+function loadAllData(callback){
+  // Per utenza master: carica tutti i dati da Sheets
+  fetch(SHEETS_URL+"?userId=ALL")
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.status==="ok" && data.data){
+        // Merge tutti i dati in S
+        var all = data.data;
+        S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
+        Object.keys(all).forEach(function(uid){
+          var d = all[uid];
+          if(d.ratings) Object.assign(S.ratings, d.ratings);
+          if(d.notes) Object.assign(S.notes, d.notes);
+          if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
+          if(d.submitted) Object.assign(S.submitted, d.submitted);
+        });
+      }
+      callback();
+    })
+    .catch(function(){ callback(); });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -503,6 +565,7 @@ function render(){
   if(S.view==="splash"){ root.innerHTML = renderSplash(); attachGlobal(); return; }
   if(S.view==="login"){ root.innerHTML = renderLogin(); attachGlobal(); return; }
   root.innerHTML = renderShell(
+    S.view==="loading"   ? `<div style="text-align:center;padding:80px 20px"><div style="font-size:32px;margin-bottom:16px">⏳</div><div style="font-size:15px;color:var(--g600);font-weight:600">Caricamento dati...</div></div>` :
     S.view==="home"      ? renderHome()      :
     S.view==="form"      ? renderForm()      :
     S.view==="autoval"   ? renderAutoval()   :
@@ -615,8 +678,20 @@ function doLogin(){
   S.loginError = null;
   S.token = userDef.id;
   S.user  = userDef;
-  S.view  = userDef.role==="master" ? "master" : "home";
+  // Mostra loading mentre carica da Sheets
+  S.view = "loading";
   render();
+  if(userDef.role === "master"){
+    loadAllData(function(){
+      S.view = "master";
+      render();
+    });
+  } else {
+    loadStorage(function(){
+      S.view = "home";
+      render();
+    });
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -770,7 +845,11 @@ function renderForm(){
     ${sub?`<div style="margin-top:8px"><span class="badge b-done">✓ Scheda inviata</span></div>`:""}
   </div>`;
 
-  if(sub){ return html + renderReadOnly(tk,tid,groups) + renderLockedMsg(); }
+  if(sub){ 
+    html += `<div style="background:var(--green-bg);border:1px solid #A7F3D0;border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="font-size:13px;color:var(--green)">✓ Scheda già inviata. Puoi modificarla e reinviarla.</div>
+    </div>`;
+  }
 
   for(const g of groups){
     html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area==="L"?"":""+g.area+" — "}${g.label}</span>${isMaster()&&g.weight>0?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
@@ -801,14 +880,8 @@ function renderForm(){
   if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio (aree A–D)</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
 
   html+=`<div id="submit-err" style="display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px"></div>`;
-  html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="${tid}">✓ Invia scheda di valutazione</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
+  html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="${tid}">${sub?"↑ Aggiorna e reinvia":"✓ Invia scheda di valutazione"}</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
   return html;
-}
-
-function renderLockedMsg(){
-  return `<div style="background:var(--g50);border:1px solid var(--g200);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;text-align:center">
-    <div style="font-size:13px;color:var(--g600)">🔒 Scheda bloccata dopo l'invio. Per richiedere una modifica scrivi a <strong>smina@cmfc.it</strong></div>
-  </div>`;
 }
 
 function renderReadOnly(ev,tg,groups){
@@ -845,7 +918,11 @@ function renderAutoval(){
     ${sub?`<div style="margin-top:8px"><span class="badge b-done">✓ Inviata</span></div>`:""}
   </div>`;
 
-  if(sub){ return html + renderReadOnly(tk,"self",groups) + renderLockedMsg(); }
+  if(sub){ 
+    html += `<div style="background:var(--green-bg);border:1px solid #A7F3D0;border-radius:var(--r);padding:12px 16px;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--green)">✓ Autovalutazione già inviata. Puoi modificarla e reinviarla.</div>
+    </div>`;
+  }
 
   for(const g of groups){
     html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area} — ${g.label}</span>${isMaster()?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
@@ -875,7 +952,7 @@ function renderAutoval(){
   if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
 
   html+=`<div id="submit-err" style="display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px"></div>`;
-  html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="self">✓ Invia autovalutazione</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
+  html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="self">${sub?"↑ Aggiorna e reinvia":"✓ Invia autovalutazione"}</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
   return html;
 }
 
@@ -1079,6 +1156,7 @@ function renderMaster(){
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
     <button class="btn-submit" style="flex:1;min-width:140px" data-a="dashboard">📊 Dashboard aggregata</button>
     <button class="export-btn" data-a="export" style="flex:1;min-width:120px">⬇ Esporta CSV</button>
+    <button class="export-btn" data-a="refresh-master" style="flex:1;min-width:100px">🔄 Aggiorna</button>
   </div>
 
   <details style="margin-bottom:20px">
@@ -1263,46 +1341,6 @@ function renderInspect(){
 }
 
 // ════════════════════════════════════════════════════════════
-// GOOGLE SHEETS SYNC
-// ════════════════════════════════════════════════════════════
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyX059bOb7yzCIvwICfvhEk3FGGYL_UwoPe2s876XFAcdczcCu0mKUPq0VKdcF0UDsoCg/exec";
-
-function sendToSheets(ev, tg, groups){
-  try {
-    const u = S.user;
-    const ts = new Date().toISOString();
-    const tname = tg === "self" ? "Autovalutazione" : (COLLABS[tg] ? COLLABS[tg].name : (MANAGERS_LIST.find(function(m){return m.id===tg;}) ? MANAGERS_LIST.find(function(m){return m.id===tg;}).name : tg));
-    const rows = [];
-
-    // Righe criteri
-    groups.forEach(function(g){
-      g.criteria.forEach(function(c){
-        const key = K(ev, tg, c.id);
-        const score = S.ratings[key] || "";
-        const note = S.notes[key] || "";
-        rows.push([ts, u.name, S.token, roleName(u.role), tname, tg==="self"?"Autovalutazione":"Valutazione", g.label, c.l, score, note, "", ""]);
-      });
-    });
-
-    // Righe domande aperte
-    const openQs = tg === "self" ? OPEN_SELF : OPEN_EVAL;
-    openQs.forEach(function(q){
-      const val = S.openAnswers[K(ev, tg, q.id)] || "";
-      if(val) rows.push([ts, u.name, S.token, roleName(u.role), tname, tg==="self"?"Autovalutazione":"Valutazione", "Giudizio complessivo", q.l, "", "", q.l, val]);
-    });
-
-    fetch(SHEETS_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({rows: rows})
-    });
-  } catch(e) {
-    console.log("Sheets sync error:", e);
-  }
-}
-
-// ════════════════════════════════════════════════════════════
 // EXPORT CSV
 // ════════════════════════════════════════════════════════════
 function exportCSV(){
@@ -1340,6 +1378,11 @@ function onClick(e){
   if(a==="logout"){ S.user=null; S.token=null; S.view="login"; S.loginError=null; render(); return; }
   if(a==="home"){ S.view = isMaster() ? "master" : "home"; render(); window.scrollTo(0,0); return; }
   if(a==="master"){ S.view="master"; render(); window.scrollTo(0,0); return; }
+  if(a==="refresh-master"){
+    S.view="loading"; render();
+    loadAllData(function(){ S.view="master"; render(); });
+    return;
+  }
   if(a==="dashboard"){ S.view="dashboard"; render(); window.scrollTo(0,0); return; }
   if(a==="autoval"){ S.view="autoval"; render(); window.scrollTo(0,0); return; }
   if(a==="inspect"){
@@ -1407,8 +1450,6 @@ function onClick(e){
     if(errEl) errEl.style.display="none";
     S.submitted[`${ev}:${tg}`]=true;
     saveStorage();
-    // Invia a Google Sheets
-    sendToSheets(ev, tg, groups);
     S.view="success"; render(); window.scrollTo(0,0); return;
   }
   if(a==="unlock"){
@@ -1449,7 +1490,6 @@ function attachGlobal(){
   document.addEventListener("input",onInput);
   if(S.view==="login") attachLoginKeys();
 }
-loadStorage();
 const splashSeen = localStorage.getItem("cmfc_splashSeen");
 S.view = splashSeen ? "login" : "splash";
 S.splashPage = 0;
