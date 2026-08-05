@@ -458,7 +458,15 @@ let S = {
   toast: null,
 };
 
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyX059bOb7yzCIvwICfvhEk3FGGYL_UwoPe2s876XFAcdczcCu0mKUPq0VKdcF0UDsoCg/exec";
+// ════════════════════════════════════════════════════════════
+// STORAGE CENTRALE — Supabase
+// ════════════════════════════════════════════════════════════
+const SB_URL = "https://lmiuakxssktnqaaczrio.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtaXVha3hzc2t0bnFhYWN6cmlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5NDE5NjgsImV4cCI6MjEwMTUxNzk2OH0.60jzFsgkjVOAtxqV5H1N9vcqqlY8fXN49UFMw8yyb20";
+
+function sbHeaders(){
+  return {"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY};
+}
 
 function getPayload(){
   return {ratings:S.ratings, notes:S.notes, openAnswers:S.openAnswers, submitted:S.submitted};
@@ -466,14 +474,13 @@ function getPayload(){
 
 function saveStorage(){
   if(!S.token) return;
-  try {
-    fetch(SHEETS_URL, {
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({action:"save", userId:S.token, payload:getPayload()})
-    });
-  } catch(e){}
-  try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
+  const payload = getPayload();
+  try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(payload)); } catch(e){}
+  fetch(SB_URL+"/rest/v1/valutazioni", {
+    method:"POST",
+    headers:Object.assign({},sbHeaders(),{"Prefer":"resolution=merge-duplicates"}),
+    body: JSON.stringify({id: S.token, data: payload})
+  }).catch(function(e){ console.log("Supabase save error:", e); });
 }
 
 function loadStorage(callback){
@@ -485,40 +492,44 @@ function loadStorage(callback){
     if(local.openAnswers) S.openAnswers = local.openAnswers;
     if(local.submitted) S.submitted = local.submitted;
   } catch(e){}
-  fetch(SHEETS_URL+"?userId="+S.token)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data && data.status==="ok" && data.data){
-        var d = data.data;
-        if(d.ratings) S.ratings = d.ratings;
-        if(d.notes) S.notes = d.notes;
-        if(d.openAnswers) S.openAnswers = d.openAnswers;
-        if(d.submitted) S.submitted = d.submitted;
-        try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
-      }
-      callback();
-    })
-    .catch(function(){ callback(); });
+  fetch(SB_URL+"/rest/v1/valutazioni?id=eq."+S.token+"&select=data", {
+    headers: sbHeaders()
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    if(rows && rows.length && rows[0].data){
+      var d = rows[0].data;
+      if(d.ratings) S.ratings = d.ratings;
+      if(d.notes) S.notes = d.notes;
+      if(d.openAnswers) S.openAnswers = d.openAnswers;
+      if(d.submitted) S.submitted = d.submitted;
+      try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
+    }
+    callback();
+  })
+  .catch(function(){ callback(); });
 }
 
 function loadAllData(callback){
-  fetch(SHEETS_URL+"?userId=ALL")
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data && data.status==="ok" && data.data){
-        var all = data.data;
-        S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
-        Object.keys(all).forEach(function(uid){
-          var d = all[uid];
-          if(d.ratings) Object.assign(S.ratings, d.ratings);
-          if(d.notes) Object.assign(S.notes, d.notes);
-          if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
-          if(d.submitted) Object.assign(S.submitted, d.submitted);
-        });
-      }
-      callback();
-    })
-    .catch(function(){ callback(); });
+  fetch(SB_URL+"/rest/v1/valutazioni?select=id,data", {
+    headers: sbHeaders()
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
+    if(rows && rows.length){
+      rows.forEach(function(row){
+        var d = row.data;
+        if(!d) return;
+        if(d.ratings) Object.assign(S.ratings, d.ratings);
+        if(d.notes) Object.assign(S.notes, d.notes);
+        if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
+        if(d.submitted) Object.assign(S.submitted, d.submitted);
+      });
+    }
+    callback();
+  })
+  .catch(function(){ callback(); });
 }
 
 // ════════════════════════════════════════════════════════════
