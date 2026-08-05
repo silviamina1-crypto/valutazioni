@@ -516,6 +516,7 @@ function loadAllData(callback){
   })
   .then(function(r){ return r.json(); })
   .then(function(rows){
+    console.log("loadAllData rows:", JSON.stringify(rows).substring(0,300));
     S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
     if(rows && rows.length){
       rows.forEach(function(row){
@@ -527,9 +528,10 @@ function loadAllData(callback){
         if(d.submitted) Object.assign(S.submitted, d.submitted);
       });
     }
+    console.log("Final submitted:", JSON.stringify(S.submitted));
     callback();
   })
-  .catch(function(){ callback(); });
+  .catch(function(e){ console.log("loadAllData ERROR:", e); callback(); });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -994,7 +996,8 @@ function renderSuccess(){
 // ════════════════════════════════════════════════════════════
 function renderDashboard(){
   const allTk = Object.keys(USERS);
-  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore"].includes(USERS[k].role));
+  // Usa gli ID utente (non le email) — corrispondono alle chiavi in S.submitted
+  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore"].includes(USERS[k].role)).map(k=>USERS[k].id);
   const collabIds = Object.keys(COLLABS);
 
   function aggScore(tid, groups){
@@ -1020,7 +1023,7 @@ function renderDashboard(){
   const subCount = collabIds.filter(tid=>evalTks.some(etk=>S.submitted[`${etk}:${tid}`])).length;
   const pendCount = collabIds.length - subCount;
   const mgSubCount = MANAGERS_LIST.filter(m=>evalTks.some(etk=>S.submitted[`${etk}:${m.id}`])).length;
-  const selfCount = allTk.filter(k=>S.submitted[`${k}:self`]).length;
+  const selfCount = Object.values(USERS).filter(u=>S.submitted[`${u.id}:self`]).length;
 
   let html=`<div class="dash-hdr">
     <h2>Dashboard Partner</h2>
@@ -1125,7 +1128,7 @@ function renderDashboard(){
 // ════════════════════════════════════════════════════════════
 function renderMaster(){
   const allTk = Object.keys(USERS);
-  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore","master"].includes(USERS[k].role));
+  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore","master"].includes(USERS[k].role)).map(k=>USERS[k].id);
   const collabIds = Object.keys(COLLABS);
 
   function aggScore(tid,groups){
