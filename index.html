@@ -459,7 +459,6 @@ let S = {
 };
 
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyX059bOb7yzCIvwICfvhEk3FGGYL_UwoPe2s876XFAcdczcCu0mKUPq0VKdcF0UDsoCg/exec";
-const PROXY = "https://corsproxy.io/?";
 
 function getPayload(){
   return {ratings:S.ratings, notes:S.notes, openAnswers:S.openAnswers, submitted:S.submitted};
@@ -486,7 +485,7 @@ function loadStorage(callback){
     if(local.openAnswers) S.openAnswers = local.openAnswers;
     if(local.submitted) S.submitted = local.submitted;
   } catch(e){}
-  fetch(PROXY + encodeURIComponent(SHEETS_URL+"?userId="+S.token))
+  fetch(SHEETS_URL+"?userId="+S.token)
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(data && data.status==="ok" && data.data){
@@ -503,7 +502,7 @@ function loadStorage(callback){
 }
 
 function loadAllData(callback){
-  fetch(PROXY + encodeURIComponent(SHEETS_URL+"?userId=ALL"))
+  fetch(SHEETS_URL+"?userId=ALL")
     .then(function(r){ return r.json(); })
     .then(function(data){
       if(data && data.status==="ok" && data.data){
