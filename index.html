@@ -459,6 +459,7 @@ let S = {
 };
 
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyX059bOb7yzCIvwICfvhEk3FGGYL_UwoPe2s876XFAcdczcCu0mKUPq0VKdcF0UDsoCg/exec";
+const PROXY = "https://corsproxy.io/?";
 
 function getPayload(){
   return {ratings:S.ratings, notes:S.notes, openAnswers:S.openAnswers, submitted:S.submitted};
@@ -466,7 +467,6 @@ function getPayload(){
 
 function saveStorage(){
   if(!S.token) return;
-  // Salva su Sheets
   try {
     fetch(SHEETS_URL, {
       method:"POST", mode:"no-cors",
@@ -474,26 +474,11 @@ function saveStorage(){
       body: JSON.stringify({action:"save", userId:S.token, payload:getPayload()})
     });
   } catch(e){}
-  // Backup locale
   try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
-}
-
-function jsonpFetch(url, callback){
-  var cbName = "cb_" + Math.random().toString(36).substr(2,8);
-  var script = document.createElement("script");
-  window[cbName] = function(data){
-    delete window[cbName];
-    document.body.removeChild(script);
-    callback(data);
-  };
-  script.src = url + (url.indexOf("?")>=0?"&":"?") + "callback=" + cbName;
-  script.onerror = function(){ delete window[cbName]; try{document.body.removeChild(script);}catch(e){} callback(null); };
-  document.body.appendChild(script);
 }
 
 function loadStorage(callback){
   if(!S.token){ callback(); return; }
-  // Prima locale (immediato)
   try {
     var local = JSON.parse(localStorage.getItem("cmfc_"+S.token)||"{}");
     if(local.ratings) S.ratings = local.ratings;
@@ -501,35 +486,40 @@ function loadStorage(callback){
     if(local.openAnswers) S.openAnswers = local.openAnswers;
     if(local.submitted) S.submitted = local.submitted;
   } catch(e){}
-  // Poi da Sheets via JSONP
-  jsonpFetch(SHEETS_URL+"?userId="+S.token, function(data){
-    if(data && data.status==="ok" && data.data){
-      var d = data.data;
-      if(d.ratings) S.ratings = d.ratings;
-      if(d.notes) S.notes = d.notes;
-      if(d.openAnswers) S.openAnswers = d.openAnswers;
-      if(d.submitted) S.submitted = d.submitted;
-      try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
-    }
-    callback();
-  });
+  fetch(PROXY + encodeURIComponent(SHEETS_URL+"?userId="+S.token))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.status==="ok" && data.data){
+        var d = data.data;
+        if(d.ratings) S.ratings = d.ratings;
+        if(d.notes) S.notes = d.notes;
+        if(d.openAnswers) S.openAnswers = d.openAnswers;
+        if(d.submitted) S.submitted = d.submitted;
+        try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
+      }
+      callback();
+    })
+    .catch(function(){ callback(); });
 }
 
 function loadAllData(callback){
-  jsonpFetch(SHEETS_URL+"?userId=ALL", function(data){
-    if(data && data.status==="ok" && data.data){
-      var all = data.data;
-      S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
-      Object.keys(all).forEach(function(uid){
-        var d = all[uid];
-        if(d.ratings) Object.assign(S.ratings, d.ratings);
-        if(d.notes) Object.assign(S.notes, d.notes);
-        if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
-        if(d.submitted) Object.assign(S.submitted, d.submitted);
-      });
-    }
-    callback();
-  });
+  fetch(PROXY + encodeURIComponent(SHEETS_URL+"?userId=ALL"))
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data && data.status==="ok" && data.data){
+        var all = data.data;
+        S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
+        Object.keys(all).forEach(function(uid){
+          var d = all[uid];
+          if(d.ratings) Object.assign(S.ratings, d.ratings);
+          if(d.notes) Object.assign(S.notes, d.notes);
+          if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
+          if(d.submitted) Object.assign(S.submitted, d.submitted);
+        });
+      }
+      callback();
+    })
+    .catch(function(){ callback(); });
 }
 
 // ════════════════════════════════════════════════════════════
