@@ -1263,6 +1263,46 @@ function renderInspect(){
 }
 
 // ════════════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ════════════════════════════════════════════════════════════
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbyX059bOb7yzCIvwICfvhEk3FGGYL_UwoPe2s876XFAcdczcCu0mKUPq0VKdcF0UDsoCg/exec";
+
+function sendToSheets(ev, tg, groups){
+  try {
+    const u = S.user;
+    const ts = new Date().toISOString();
+    const tname = tg === "self" ? "Autovalutazione" : (COLLABS[tg] ? COLLABS[tg].name : (MANAGERS_LIST.find(function(m){return m.id===tg;}) ? MANAGERS_LIST.find(function(m){return m.id===tg;}).name : tg));
+    const rows = [];
+
+    // Righe criteri
+    groups.forEach(function(g){
+      g.criteria.forEach(function(c){
+        const key = K(ev, tg, c.id);
+        const score = S.ratings[key] || "";
+        const note = S.notes[key] || "";
+        rows.push([ts, u.name, S.token, roleName(u.role), tname, tg==="self"?"Autovalutazione":"Valutazione", g.label, c.l, score, note, "", ""]);
+      });
+    });
+
+    // Righe domande aperte
+    const openQs = tg === "self" ? OPEN_SELF : OPEN_EVAL;
+    openQs.forEach(function(q){
+      const val = S.openAnswers[K(ev, tg, q.id)] || "";
+      if(val) rows.push([ts, u.name, S.token, roleName(u.role), tname, tg==="self"?"Autovalutazione":"Valutazione", "Giudizio complessivo", q.l, "", "", q.l, val]);
+    });
+
+    fetch(SHEETS_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({rows: rows})
+    });
+  } catch(e) {
+    console.log("Sheets sync error:", e);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
 // EXPORT CSV
 // ════════════════════════════════════════════════════════════
 function exportCSV(){
@@ -1366,7 +1406,10 @@ function onClick(e){
     }
     if(errEl) errEl.style.display="none";
     S.submitted[`${ev}:${tg}`]=true;
-    saveStorage(); S.view="success"; render(); window.scrollTo(0,0); return;
+    saveStorage();
+    // Invia a Google Sheets
+    sendToSheets(ev, tg, groups);
+    S.view="success"; render(); window.scrollTo(0,0); return;
   }
   if(a==="unlock"){
     const key = el.dataset.key;
