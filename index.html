@@ -578,6 +578,11 @@ function loadAllData(callback){
 // ════════════════════════════════════════════════════════════
 function K(ev,tg,id){ return `${ev}:${tg}:${id}`; }
 function initials(n){ return n.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase(); }
+function getIdToName(){
+  var m = {};
+  Object.values(USERS).forEach(function(u){ m[u.id]=u.name; });
+  return m;
+}
 
 function areaAvg(ev,tg,crit){
   // NV non entra nella media numerica, ma non impedisce il calcolo
@@ -1168,6 +1173,7 @@ function renderDashboard(){
 // MASTER VIEW
 // ════════════════════════════════════════════════════════════
 function renderMaster(){
+  const idToName = getIdToName();
   const allTk = Object.keys(USERS);
   const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore","master"].includes(USERS[k].role)).map(k=>USERS[k].id);
   const collabIds = Object.keys(COLLABS);
@@ -1326,9 +1332,7 @@ function renderMaster(){
 // ════════════════════════════════════════════════════════════
 function renderInspect(){
   const {inspectId:tid, inspectName:tname, inspectType:itype} = S;
-  // Mappa id → nome per mostrare il nome del valutatore
-  const idToName = {};
-  Object.values(USERS).forEach(function(u){ idToName[u.id] = u.name; });
+  const idToName = getIdToName();
   const evalTks = Object.values(USERS)
     .filter(u=>["manager","partner","partner_fondatore","master"].includes(u.role))
     .map(u=>u.id);
