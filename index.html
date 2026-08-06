@@ -525,17 +525,34 @@ function loadStorage(callback){
 
 function loadAllData(callback){
   var done = false;
-  var timer = setTimeout(function(){ if(!done){ done=true; callback(); } }, 8000);
+  function finish(){
+    if(!done){ done=true; callback(); }
+  }
+  // Timeout di sicurezza 4 secondi
+  var timer = setTimeout(function(){
+    if(!done){
+      done=true;
+      var lb = document.getElementById("loading-bar");
+      if(lb){ lb.innerHTML = "⚠️ Timeout — dati parziali. Premi Aggiorna per riprovare."; lb.style.background="var(--amber-bg)"; lb.style.borderColor="#E8D5A0"; lb.style.color="var(--amber-txt)"; }
+      callback();
+    }
+  }, 4000);
+  // AbortController per cancellare la fetch
+  var controller = new AbortController();
+  var abortTimer = setTimeout(function(){ controller.abort(); }, 3500);
+  
   fetch(SB_URL+"/rest/v1/valutazioni?select=id,data", {
-    headers: sbHeaders()
+    headers: sbHeaders(),
+    signal: controller.signal
   })
   .then(function(r){ 
-    if(!r.ok){ console.log("Supabase error:", r.status); if(!done){ done=true; clearTimeout(timer); callback(); } return Promise.reject("http error"); }
+    clearTimeout(abortTimer);
+    if(!r.ok){ clearTimeout(timer); finish(); return Promise.reject("http error"); }
     return r.json(); 
   })
   .then(function(rows){
     clearTimeout(timer);
-    if(!Array.isArray(rows)){ console.log("Not array:", rows); if(!done){ done=true; callback(); } return; }
+    if(!Array.isArray(rows)){ finish(); return; }
     S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
     rows.forEach(function(row){
       var d = row.data;
@@ -545,9 +562,15 @@ function loadAllData(callback){
       if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
       if(d.submitted) Object.assign(S.submitted, d.submitted);
     });
-    if(!done){ done=true; callback(); }
+    if(!done){ 
+      done=true; 
+      // Nascondi loading bar e mostra timestamp
+      var lb = document.getElementById("loading-bar");
+      if(lb){ lb.innerHTML = "✅ Dati aggiornati — " + new Date().toLocaleTimeString("it-IT"); lb.style.background="var(--green-bg)"; lb.style.borderColor="#A7F3D0"; lb.style.color="var(--green)"; }
+      callback(); 
+    }
   })
-  .catch(function(e){ console.log("loadAllData ERROR:", e); if(!done){ done=true; clearTimeout(timer); callback(); } });
+  .catch(function(){ clearTimeout(timer); clearTimeout(abortTimer); finish(); });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -701,15 +724,17 @@ function doLogin(){
   S.loginError = null;
   S.token = userDef.id;
   S.user  = userDef;
-  // Mostra loading mentre carica da Sheets
-  S.view = "loading";
-  render();
   if(userDef.role === "master"){
+    // Mostra subito master vuoto, poi carica dati in background
+    S.view = "master";
+    render();
     loadAllData(function(){
       S.view = "master";
       render();
     });
   } else {
+    S.view = "loading";
+    render();
     loadStorage(function(){
       S.view = "home";
       render();
@@ -1180,7 +1205,10 @@ function renderMaster(){
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
     <button class="btn-submit" style="flex:1;min-width:140px" data-a="dashboard">📊 Dashboard aggregata</button>
     <button class="export-btn" data-a="export" style="flex:1;min-width:120px">⬇ Esporta CSV</button>
-    <button class="export-btn" data-a="refresh-master" style="flex:1;min-width:100px">🔄 Aggiorna</button>
+    <button class="export-btn" data-a="refresh-master" style="flex:1;min-width:100px" id="btn-refresh">🔄 Aggiorna</button>
+  </div>
+  <div id="loading-bar" style="background:var(--teal-bg);border:1px solid var(--sky);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--teal-dark);display:flex;align-items:center;gap:8px">
+    <span style="animation:pulse 1s ease infinite;display:inline-block">⏳</span> Caricamento dati da Supabase...
   </div>
 
   <details style="margin-bottom:20px">
@@ -1415,7 +1443,8 @@ function onClick(e){
   if(a==="home"){ S.view = isMaster() ? "master" : "home"; render(); window.scrollTo(0,0); return; }
   if(a==="master"){ S.view="master"; render(); window.scrollTo(0,0); return; }
   if(a==="refresh-master"){
-    S.view="loading"; render();
+    var lb = document.getElementById("loading-bar");
+    if(lb){ lb.innerHTML = '<span style="animation:pulse 1s ease infinite;display:inline-block">⏳</span> Caricamento dati da Supabase...'; lb.style.background="var(--teal-bg)"; lb.style.borderColor="var(--sky)"; lb.style.color="var(--teal-dark)"; }
     loadAllData(function(){ S.view="master"; render(); });
     return;
   }
