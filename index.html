@@ -485,12 +485,14 @@ function saveStorage(){
 
 function loadStorage(callback){
   if(!S.token){ callback(); return; }
+  // Carica prima da locale
+  var localData = null;
   try {
-    var local = JSON.parse(localStorage.getItem("cmfc_"+S.token)||"{}");
-    if(local.ratings) S.ratings = local.ratings;
-    if(local.notes) S.notes = local.notes;
-    if(local.openAnswers) S.openAnswers = local.openAnswers;
-    if(local.submitted) S.submitted = local.submitted;
+    localData = JSON.parse(localStorage.getItem("cmfc_"+S.token)||"{}");
+    if(localData.ratings) S.ratings = localData.ratings;
+    if(localData.notes) S.notes = localData.notes;
+    if(localData.openAnswers) S.openAnswers = localData.openAnswers;
+    if(localData.submitted) S.submitted = localData.submitted;
   } catch(e){}
   fetch(SB_URL+"/rest/v1/valutazioni?id=eq."+S.token+"&select=data", {
     headers: sbHeaders()
@@ -499,11 +501,22 @@ function loadStorage(callback){
   .then(function(rows){
     if(rows && rows.length && rows[0].data){
       var d = rows[0].data;
-      if(d.ratings) S.ratings = d.ratings;
-      if(d.notes) S.notes = d.notes;
-      if(d.openAnswers) S.openAnswers = d.openAnswers;
-      if(d.submitted) S.submitted = d.submitted;
+      // Usa Supabase solo se ha più dati del locale
+      var sbRatingsCount = d.ratings ? Object.keys(d.ratings).length : 0;
+      var localRatingsCount = localData && localData.ratings ? Object.keys(localData.ratings).length : 0;
+      if(sbRatingsCount >= localRatingsCount){
+        if(d.ratings) S.ratings = d.ratings;
+        if(d.notes) S.notes = d.notes;
+        if(d.openAnswers) S.openAnswers = d.openAnswers;
+        if(d.submitted) S.submitted = d.submitted;
+      } else {
+        // Locale ha più dati — carica da locale e salva su Supabase
+        saveStorage();
+      }
       try { localStorage.setItem("cmfc_"+S.token, JSON.stringify(getPayload())); } catch(e){}
+    } else if(localData && localData.ratings && Object.keys(localData.ratings).length > 0){
+      // Supabase vuoto ma locale ha dati — salva su Supabase
+      saveStorage();
     }
     callback();
   })
@@ -1243,19 +1256,18 @@ function renderMaster(){
   // ── Sblocco schede ──
   const allSubmitted = [];
   for(const etk of evalTks){
-    const eu = USERS[etk]; if(!eu) continue;
+    const ename = idToName[etk]||etk;
     for(const [cid,ci] of Object.entries(COLLABS)){
-      if(S.submitted[`${etk}:${cid}`]) allSubmitted.push({etk, eid:eu.id, ename:eu.name, tid:cid, tname:ci.name, key:`${eu.id}:${cid}`});
+      if(S.submitted[`${etk}:${cid}`]) allSubmitted.push({etk, ename, tid:cid, tname:ci.name, key:`${etk}:${cid}`});
     }
     for(const mg of MANAGERS_LIST){
-      if(S.submitted[`${etk}:${mg.id}`]) allSubmitted.push({etk, eid:eu.id, ename:eu.name, tid:mg.id, tname:mg.name, key:`${eu.id}:${mg.id}`});
+      if(S.submitted[`${etk}:${mg.id}`]) allSubmitted.push({etk, ename, tid:mg.id, tname:mg.name, key:`${etk}:${mg.id}`});
     }
-    if(S.submitted[`${etk}:self`]) allSubmitted.push({etk, eid:eu.id, ename:eu.name, tid:"self", tname:"Autovalutazione", key:`${eu.id}:self`});
+    if(S.submitted[`${etk}:self`]) allSubmitted.push({etk, ename, tid:"self", tname:"Autovalutazione", key:`${etk}:self`});
   }
   // autovalutazioni di collab/praticanti
-  Object.keys(USERS).filter(k=>["professionista","praticante"].includes(USERS[k].role)).forEach(k=>{
-    const u=USERS[k];
-    if(S.submitted[`${u.id}:self`]) allSubmitted.push({etk:k, eid:u.id, ename:u.name, tid:"self", tname:"Autovalutazione", key:`${u.id}:self`});
+  Object.values(USERS).filter(u=>["professionista","praticante"].includes(u.role)).forEach(function(u){
+    if(S.submitted[`${u.id}:self`]) allSubmitted.push({etk:u.id, ename:u.name, tid:"self", tname:"Autovalutazione", key:`${u.id}:self`});
   });
 
   if(allSubmitted.length){
@@ -1283,8 +1295,12 @@ function renderMaster(){
 // ════════════════════════════════════════════════════════════
 function renderInspect(){
   const {inspectId:tid, inspectName:tname, inspectType:itype} = S;
-  const allTk = Object.keys(USERS);
-  const evalTks = allTk.filter(k=>["manager","partner","partner_fondatore","master"].includes(USERS[k].role));
+  // Mappa id → nome per mostrare il nome del valutatore
+  const idToName = {};
+  Object.values(USERS).forEach(function(u){ idToName[u.id] = u.name; });
+  const evalTks = Object.values(USERS)
+    .filter(u=>["manager","partner","partner_fondatore","master"].includes(u.role))
+    .map(u=>u.id);
   const groups = itype==="mgr" ? [...CRIT_COLLAB,...CRIT_LEADER] : CRIT_COLLAB;
   const submittedEvals = evalTks.filter(etk=>S.submitted[`${etk}:${tid}`]);
 
@@ -1303,7 +1319,7 @@ function renderInspect(){
   for(const g of groups){
     html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area==="L"?"":g.area+" — "}${g.label}</span>${g.weight>0?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
     for(const c of g.criteria){
-      const vals = submittedEvals.map(etk=>({name:USERS[etk].name, v:S.ratings[K(etk,tid,c.id)], note:S.notes[K(etk,tid,c.id)]||""})).filter(x=>x.v);
+      const vals = submittedEvals.map(etk=>({name:idToName[etk]||etk, v:S.ratings[K(etk,tid,c.id)], note:S.notes[K(etk,tid,c.id)]||""})).filter(x=>x.v);
       const avg = vals.length ? (vals.reduce((s,x)=>s+x.v,0)/vals.length) : null;
       html+=`<div class="crit-row">
         <div class="crit-label">${c.l}</div>
@@ -1326,7 +1342,7 @@ function renderInspect(){
     const sc = weightedScore(etk,tid,groups.filter(g=>g.weight>0));
     const f = fascia(sc);
     html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--g100)">
-      <div><div style="font-size:14px;font-weight:600">${USERS[etk].name}</div><div style="font-size:12px;color:var(--g400)">${roleName(USERS[etk].role)}</div></div>
+      <div><div style="font-size:14px;font-weight:600">${idToName[etk]||etk}</div></div>
       <div style="text-align:right">${sc!==null?`<span style="font-size:20px;font-weight:800;color:var(--navy)">${sc.toFixed(2)}</span><span style="font-size:12px;color:var(--g400)"> / 5</span><br><span class="fascia-pill ${f.c}" style="font-size:11px;padding:2px 8px">${f.l}</span>`:"—"}</div>
     </div>`;
   }
@@ -1338,7 +1354,7 @@ function renderInspect(){
     for(const etk of submittedEvals){
       const answers = OPEN_EVAL.map(q=>({l:q.l,v:S.openAnswers[K(etk,tid,q.id)]||""})).filter(x=>x.v);
       if(!answers.length) continue;
-      html+=`<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">${USERS[etk].name}</div>`;
+      html+=`<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:6px">${idToName[etk]||etk}</div>`;
       for(const a of answers) html+=`<div style="margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--g400);margin-bottom:2px">${a.l}</div><div style="font-size:13px;color:var(--g800);line-height:1.5">${a.v}</div></div>`;
       html+=`</div>`;
     }
@@ -1356,14 +1372,16 @@ function exportCSV(){
   let rows=[["Valutatore","Ruolo Valutatore","Soggetto Valutato","Livello","Area","Criterio","Punteggio","Anno Prec.","Note"].join(";")];
   const targets=[...Object.entries(COLLABS).map(([id,i])=>({id,name:i.name,level:i.level,groups:CRIT_COLLAB})),
     ...MANAGERS_LIST.map(m=>({id:m.id,name:m.name,level:"Manager",groups:[...CRIT_COLLAB,...CRIT_LEADER]}))];
+  const idToNameExp = {};
+  Object.values(USERS).forEach(function(u){ idToNameExp[u.id]=u.name; });
   for(const {id:tid,name:tname,level,groups} of targets){
     for(const etk of evalTks){
       if(!S.submitted[`${etk}:${tid}`]) continue;
-      const eu=USERS[etk];
+      const ename = idToNameExp[etk]||etk;
       for(const g of groups){
         for(const c of g.criteria){
           const key=K(etk,tid,c.id);
-          rows.push([eu.name,roleName(eu.role),tname,level,g.label,c.l,S.ratings[key]||"",S.prevRatings[key]||"",(S.notes[key]||"").replace(/;/g,":")].join(";"));
+          rows.push([ename,tname,level,g.label,c.l,S.ratings[key]||"",S.prevRatings[key]||"",(S.notes[key]||"").replace(/;/g,":")].join(";"));
         }
       }
     }
