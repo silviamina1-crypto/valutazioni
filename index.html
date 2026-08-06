@@ -524,27 +524,30 @@ function loadStorage(callback){
 }
 
 function loadAllData(callback){
+  var done = false;
+  var timer = setTimeout(function(){ if(!done){ done=true; callback(); } }, 8000);
   fetch(SB_URL+"/rest/v1/valutazioni?select=id,data", {
     headers: sbHeaders()
   })
-  .then(function(r){ return r.json(); })
-  .then(function(rows){
-    console.log("loadAllData rows:", JSON.stringify(rows).substring(0,300));
-    S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
-    if(rows && rows.length){
-      rows.forEach(function(row){
-        var d = row.data;
-        if(!d) return;
-        if(d.ratings) Object.assign(S.ratings, d.ratings);
-        if(d.notes) Object.assign(S.notes, d.notes);
-        if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
-        if(d.submitted) Object.assign(S.submitted, d.submitted);
-      });
-    }
-    console.log("Final submitted:", JSON.stringify(S.submitted));
-    callback();
+  .then(function(r){ 
+    if(!r.ok){ console.log("Supabase error:", r.status); if(!done){ done=true; clearTimeout(timer); callback(); } return Promise.reject("http error"); }
+    return r.json(); 
   })
-  .catch(function(e){ console.log("loadAllData ERROR:", e); callback(); });
+  .then(function(rows){
+    clearTimeout(timer);
+    if(!Array.isArray(rows)){ console.log("Not array:", rows); if(!done){ done=true; callback(); } return; }
+    S.ratings={}; S.notes={}; S.openAnswers={}; S.submitted={};
+    rows.forEach(function(row){
+      var d = row.data;
+      if(!d) return;
+      if(d.ratings) Object.assign(S.ratings, d.ratings);
+      if(d.notes) Object.assign(S.notes, d.notes);
+      if(d.openAnswers) Object.assign(S.openAnswers, d.openAnswers);
+      if(d.submitted) Object.assign(S.submitted, d.submitted);
+    });
+    if(!done){ done=true; callback(); }
+  })
+  .catch(function(e){ console.log("loadAllData ERROR:", e); if(!done){ done=true; clearTimeout(timer); callback(); } });
 }
 
 // ════════════════════════════════════════════════════════════
