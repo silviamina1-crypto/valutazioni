@@ -1162,19 +1162,20 @@ function renderDashboard(){
   html+=`</div>`;
 
   // Self-assessments
-  const selfDone = allTk.filter(k=>S.submitted[`${k}:self`]);
+  // Autovalutazioni — usa gli id degli utenti
+  const selfDone = Object.values(USERS).filter(u=>u.role!=="master" && S.submitted[`${u.id}:self`]);
   if(selfDone.length){
     html+=`<div class="sec-lbl">Autovalutazioni inviate</div><div class="tbl-wrap">
       <div class="tbl-hdr"><div class="th" style="text-align:left">Persona</div><div class="th">A</div><div class="th">B</div><div class="th">C/L</div><div class="th">D/E</div><div class="th">Score</div><div class="th">Fascia</div></div>`;
-    for(const stk of selfDone){
-      const su=USERS[stk];
-      const isM=["manager","manager_self"].includes(su.role);
+    for(const su of selfDone){
+      const uid = su.id;
+      const isM=["manager"].includes(su.role);
       const sg=isM?CRIT_SELF_MANAGER:CRIT_COLLAB;
       const areas=["A","B","C","D"].map(a=>{
         const g=sg.find(x=>x.area===a); if(!g) return null;
-        return areaAvg(stk,"self",g.criteria);
+        return areaAvg(uid,"self",g.criteria);
       });
-      const sc=weightedScore(stk,"self",sg);
+      const sc=weightedScore(uid,"self",sg);
       const f=fascia(sc);
       html+=`<div class="tbl-row">
         <div><div class="tc-name">${su.name}</div><div class="tc-level">${roleName(su.role)}</div></div>
@@ -1209,9 +1210,10 @@ function renderMaster(){
 
   const subCollab = collabIds.filter(tid=>evalTks.some(etk=>S.submitted[`${etk}:${tid}`])).length;
   const subMgr = MANAGERS_LIST.filter(m=>evalTks.some(etk=>S.submitted[`${etk}:${m.id}`])).length;
-  const selfCount = allTk.filter(k=>S.submitted[`${k}:self`]).length;
+  const allUserIds = Object.values(USERS).filter(u=>u.role!=="master");
+  const selfCount = allUserIds.filter(u=>S.submitted[`${u.id}:self`]).length;
   const totalForms = collabIds.length + MANAGERS_LIST.length;
-  const totalSelf = allTk.filter(k=>!["admin","master"].includes(USERS[k].role)).length;
+  const totalSelf = allUserIds.length;
 
   let html=`
   <div style="background:var(--navy);border-radius:var(--r);padding:18px 20px;margin-bottom:18px;color:#fff;border-left:4px solid var(--teal)">
@@ -1309,7 +1311,35 @@ function renderMaster(){
   }
   html+=`</div>`;
 
-  // ── Sblocco schede ──
+  // ── Autovalutazioni ──
+  const selfDoneUsers = Object.values(USERS).filter(u=>u.role!=="master" && S.submitted[`${u.id}:self`]);
+  if(selfDoneUsers.length){
+    html+=`<div class="sec-lbl" style="margin-top:16px">Autovalutazioni inviate</div>
+    <div class="tbl-wrap">
+      <div class="tbl-hdr" style="grid-template-columns:1fr 80px 80px 80px 80px 80px 90px">
+        <div class="th" style="text-align:left">Nome</div>
+        <div class="th">A</div><div class="th">B</div><div class="th">C/L</div><div class="th">D/E</div>
+        <div class="th">Score</div><div class="th">Fascia</div>
+      </div>`;
+    for(const su of selfDoneUsers){
+      const uid = su.id;
+      const isM = su.role==="manager";
+      const sg = isM ? CRIT_SELF_MANAGER : CRIT_COLLAB;
+      const areas = ["A","B","C","D"].map(a=>{
+        const g = sg.find(x=>x.area===a); if(!g) return null;
+        return areaAvg(uid,"self",g.criteria);
+      });
+      const sc = weightedScore(uid,"self",sg);
+      const f = fascia(sc);
+      html+=`<div class="tbl-row" style="grid-template-columns:1fr 80px 80px 80px 80px 80px 90px">
+        <div><div class="tc-name">${su.name}</div><div class="tc-level">${roleName(su.role)}</div></div>
+        ${areas.map(a=>`<div class="${a!==null?"tc-score":"tc-empty"}">${a!==null?a.toFixed(1):"—"}</div>`).join("")}
+        <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?sc.toFixed(2):"—"}</div>
+        <div class="tc-fascia">${f?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:2px 8px">${f.l}</span>`:"—"}</div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
   const allSubmitted = [];
   for(const etk of evalTks){
     const ename = idToName[etk]||etk;
@@ -1429,12 +1459,13 @@ function renderInspect(){
 // EXPORT CSV
 // ════════════════════════════════════════════════════════════
 function exportCSV(){
-  const evalTks=Object.keys(USERS).filter(k=>["manager","partner","partner_fondatore"].includes(USERS[k].role));
-  let rows=[["Valutatore","Ruolo Valutatore","Soggetto Valutato","Livello","Area","Criterio","Punteggio","Anno Prec.","Note"].join(";")];
+  const evalTks = Object.values(USERS)
+    .filter(u=>["manager","partner","partner_fondatore"].includes(u.role))
+    .map(u=>u.id);
+  const idToNameExp = getIdToName();
+  let rows=[["Valutatore","Soggetto Valutato","Livello","Area","Criterio","Punteggio","Note"].join(";")];
   const targets=[...Object.entries(COLLABS).map(([id,i])=>({id,name:i.name,level:i.level,groups:CRIT_COLLAB})),
     ...MANAGERS_LIST.map(m=>({id:m.id,name:m.name,level:"Manager",groups:[...CRIT_COLLAB,...CRIT_LEADER]}))];
-  const idToNameExp = {};
-  Object.values(USERS).forEach(function(u){ idToNameExp[u.id]=u.name; });
   for(const {id:tid,name:tname,level,groups} of targets){
     for(const etk of evalTks){
       if(!S.submitted[`${etk}:${tid}`]) continue;
@@ -1442,8 +1473,25 @@ function exportCSV(){
       for(const g of groups){
         for(const c of g.criteria){
           const key=K(etk,tid,c.id);
-          rows.push([ename,tname,level,g.label,c.l,S.ratings[key]||"",S.prevRatings[key]||"",(S.notes[key]||"").replace(/;/g,":")].join(";"));
+          const score = S.ratings[key]||"";
+          if(!score) continue; // salta criteri non compilati
+          rows.push([ename,tname,level,g.label,c.l,score,(S.notes[key]||"").replace(/;/g,":")].join(";"));
         }
+      }
+    }
+  }
+  // Autovalutazioni
+  const selfUsers = Object.values(USERS).filter(u=>u.role!=="master" && S.submitted[`${u.id}:self`]);
+  for(const su of selfUsers){
+    const uid = su.id;
+    const isM = su.role==="manager";
+    const sg = isM ? CRIT_SELF_MANAGER : CRIT_COLLAB;
+    for(const g of sg){
+      for(const c of g.criteria){
+        const key = K(uid,"self",c.id);
+        const score = S.ratings[key]||"";
+        if(!score) continue;
+        rows.push([su.name,"AUTOVALUTAZIONE",su.name,roleName(su.role),g.label,c.l,score,(S.notes[key]||"").replace(/;/g,":")].join(";"));
       }
     }
   }
