@@ -950,7 +950,7 @@ function renderForm(){
 
   const sc=weightedScore(tk,tid,CRIT_COLLAB);
   const f=fascia(sc);
-  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio (aree A–D)</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+  if(sc!==null && isMaster()) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio (aree A–D)</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
 
   html+=`<div id="submit-err" style="display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px"></div>`;
   html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="${tid}">${sub?"↑ Aggiorna e reinvia":"✓ Invia scheda di valutazione"}</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
@@ -970,7 +970,7 @@ function renderReadOnly(ev,tg,groups){
   }
   const sc=weightedScore(ev,tg,groups.filter(g=>g.weight>0));
   const f=fascia(sc);
-  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato finale</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+  if(sc!==null && isMaster()) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato finale</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
   return html;
 }
 
@@ -1022,7 +1022,7 @@ function renderAutoval(){
 
   const sc=weightedScore(tk,"self",groups);
   const f=fascia(sc);
-  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+  if(sc!==null && isMaster()) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato provvisorio</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
 
   html+=`<div id="submit-err" style="display:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:10px"></div>`;
   html+=`<div class="submit-area"><button class="btn-submit" data-a="submit" data-ev="${tk}" data-tg="self">${sub?"↑ Aggiorna e reinvia":"✓ Invia autovalutazione"}</button><button class="btn-draft" data-a="savedraft">💾 Salva bozza</button></div>`;
@@ -1228,6 +1228,11 @@ function renderMaster(){
     <div class="stat-c"><div class="stat-n">${subMgr}/${MANAGERS_LIST.length}</div><div class="stat-l">Schede manager</div></div>
     <div class="stat-c"><div class="stat-n">${selfCount}/${totalSelf}</div><div class="stat-l">Autovalutaz.</div></div>
     <div class="stat-c"><div class="stat-n" style="font-size:18px">${Math.round((subCollab+subMgr+selfCount)/(totalForms+totalSelf)*100)}%</div><div class="stat-l">Completamento</div></div>
+  </div>
+  <div style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--g600)">
+    <strong style="color:var(--gold)">📐 Formula ponderazione score (su scala 1–5):</strong>
+    A Competenze tecnico-professionali <strong>40%</strong> · B Organizzazione e affidabilità <strong>20%</strong> · C Relazioni e soft skills <strong>20%</strong> · D Proattività e sviluppo <strong>20%</strong>
+    <span style="margin-left:8px;color:var(--g400)">— Score finale = media A×0.4 + media B×0.2 + media C×0.2 + media D×0.2</span>
   </div>
 
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
