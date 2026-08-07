@@ -1584,6 +1584,7 @@ function onClick(e){
     S.view = "inspect-self";
     render(); window.scrollTo(0,0); return;
   }
+  if(a==="inspect"){
     S.inspectId=el.dataset.iid; S.inspectName=el.dataset.iname; S.inspectType=el.dataset.itype;
     S.view="inspect"; render(); window.scrollTo(0,0); return;
   }
