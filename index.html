@@ -1347,38 +1347,6 @@ function renderMaster(){
     }
     html+=`</div>`;
   }
-  const allSubmitted = [];
-  for(const etk of evalTks){
-    const ename = idToName[etk]||etk;
-    for(const [cid,ci] of Object.entries(COLLABS)){
-      if(S.submitted[`${etk}:${cid}`]) allSubmitted.push({etk, ename, tid:cid, tname:ci.name, key:`${etk}:${cid}`});
-    }
-    for(const mg of MANAGERS_LIST){
-      if(S.submitted[`${etk}:${mg.id}`]) allSubmitted.push({etk, ename, tid:mg.id, tname:mg.name, key:`${etk}:${mg.id}`});
-    }
-    if(S.submitted[`${etk}:self`]) allSubmitted.push({etk, ename, tid:"self", tname:"Autovalutazione", key:`${etk}:self`});
-  }
-  // autovalutazioni di collab/praticanti
-  Object.values(USERS).filter(u=>["professionista","praticante"].includes(u.role)).forEach(function(u){
-    if(S.submitted[`${u.id}:self`]) allSubmitted.push({etk:u.id, ename:u.name, tid:"self", tname:"Autovalutazione", key:`${u.id}:self`});
-  });
-
-  if(allSubmitted.length){
-    html+=`<div class="sec-lbl" style="margin-top:20px">Sblocco schede inviate</div>
-    <div class="tbl-wrap"><div class="tbl-hdr" style="grid-template-columns:1fr 1fr 80px">
-      <div class="th" style="text-align:left">Valutatore</div>
-      <div class="th" style="text-align:left">Scheda</div>
-      <div class="th">Azione</div>
-    </div>`;
-    for(const s of allSubmitted){
-      html+=`<div class="tbl-row" style="grid-template-columns:1fr 1fr 80px">
-        <div class="tc-name">${s.ename}</div>
-        <div style="font-size:12px;color:var(--g600)">${s.tname}</div>
-        <div style="text-align:center"><button class="copy-btn" style="background:var(--red-bg);color:var(--red)" data-a="unlock" data-key="${s.key}">Sblocca</button></div>
-      </div>`;
-    }
-    html+=`</div>`;
-  }
 
   return html;
 }
@@ -1655,14 +1623,6 @@ function onClick(e){
     S.submitted[`${ev}:${tg}`]=true;
     saveStorage();
     S.view="success"; render(); window.scrollTo(0,0); return;
-  }
-  if(a==="unlock"){
-    const key = el.dataset.key;
-    delete S.submitted[key];
-    saveStorage();
-    toast("🔓 Scheda sbloccata");
-    render();
-    return;
   }
   if(a==="export"){ exportCSV(); return; }
 }
