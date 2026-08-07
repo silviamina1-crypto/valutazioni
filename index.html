@@ -256,6 +256,8 @@ window.onerror=function(msg,src,line){document.getElementById('err').style.displ
 // La password è uguale per tutti, non visibile né modificabile
 // La password master è riservata all'account partners@cmfc.it.
 // ════════════════════════════════════════════════════════════
+const MAINTENANCE = false; // Imposta true per bloccare l'accesso durante la manutenzione
+
 const PWD_MASTER = "Severimagiusti26"; // password solo per partners@cmfc.it
 
 // Password individuali per ogni utente
@@ -613,6 +615,23 @@ function toast(msg){ S.toast=msg; render(); setTimeout(()=>{ S.toast=null; rende
 // ════════════════════════════════════════════════════════════
 function render(){
   const root = document.getElementById("root");
+  // Manutenzione — blocca tutti tranne master
+  if(MAINTENANCE && (!S.user || S.user.role !== "master")){
+    root.innerHTML = `
+    <div class="center-wrap">
+      <div class="access-card" style="text-align:center">
+        <div style="font-size:40px;margin-bottom:16px">🔧</div>
+        <div class="studio-logo">Studio CMFC</div>
+        <div class="studio-sub">Commercialisti Associati · Milano e Torino</div>
+        <div style="margin-top:20px;font-size:14px;color:var(--g600);line-height:1.6">
+          Il sistema è temporaneamente in manutenzione.<br>
+          Riprova tra qualche ora.<br><br>
+          <strong>Per urgenze: smina@cmfc.it</strong>
+        </div>
+      </div>
+    </div>`;
+    return;
+  }
   if(S.view==="splash"){ root.innerHTML = renderSplash(); attachGlobal(); return; }
   if(S.view==="login"){ root.innerHTML = renderLogin(); attachGlobal(); return; }
   root.innerHTML = renderShell(
