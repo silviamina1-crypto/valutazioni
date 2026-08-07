@@ -642,7 +642,8 @@ function render(){
     S.view==="success"   ? renderSuccess()   :
     S.view==="dashboard" ? renderDashboard() :
     S.view==="master"    ? renderMaster()    :
-    S.view==="inspect"   ? renderInspect()   : ""
+    S.view==="inspect"      ? renderInspect()      :
+    S.view==="inspect-self" ? renderInspectSelf()   : ""
   );
   attachGlobal();
 }
@@ -1316,10 +1317,10 @@ function renderMaster(){
   if(selfDoneUsers.length){
     html+=`<div class="sec-lbl" style="margin-top:16px">Autovalutazioni inviate</div>
     <div class="tbl-wrap">
-      <div class="tbl-hdr" style="grid-template-columns:1fr 80px 80px 80px 80px 80px 90px">
+      <div class="tbl-hdr" style="grid-template-columns:1fr 60px 60px 60px 60px 70px 80px 70px">
         <div class="th" style="text-align:left">Nome</div>
         <div class="th">A</div><div class="th">B</div><div class="th">C/L</div><div class="th">D/E</div>
-        <div class="th">Score</div><div class="th">Fascia</div>
+        <div class="th">Score</div><div class="th">Fascia</div><div class="th">Vedi</div>
       </div>`;
     for(const su of selfDoneUsers){
       const uid = su.id;
@@ -1331,11 +1332,12 @@ function renderMaster(){
       });
       const sc = weightedScore(uid,"self",sg);
       const f = fascia(sc);
-      html+=`<div class="tbl-row" style="grid-template-columns:1fr 80px 80px 80px 80px 80px 90px">
+      html+=`<div class="tbl-row" style="grid-template-columns:1fr 60px 60px 60px 60px 70px 80px 70px">
         <div><div class="tc-name">${su.name}</div><div class="tc-level">${roleName(su.role)}</div></div>
         ${areas.map(a=>`<div class="${a!==null?"tc-score":"tc-empty"}">${a!==null?a.toFixed(1):"—"}</div>`).join("")}
         <div class="${sc!==null?"tc-score":"tc-empty"}">${sc!==null?sc.toFixed(2):"—"}</div>
         <div class="tc-fascia">${f?`<span class="fascia-pill ${f.c}" style="font-size:11px;padding:2px 8px">${f.l}</span>`:"—"}</div>
+        <div style="text-align:center"><button class="copy-btn" data-a="inspect-self" data-uid="${uid}" data-uname="${su.name}" data-urole="${su.role}">Vedi</button></div>
       </div>`;
     }
     html+=`</div>`;
@@ -1456,6 +1458,60 @@ function renderInspect(){
 }
 
 // ════════════════════════════════════════════════════════════
+// INSPECT SELF — dettaglio autovalutazione singola persona
+// ════════════════════════════════════════════════════════════
+function renderInspectSelf(){
+  const uid = S.inspectSelfUid;
+  const uname = S.inspectSelfName;
+  const urole = S.inspectSelfRole;
+  const isM = urole === "manager";
+  const groups = isM ? CRIT_SELF_MANAGER : CRIT_COLLAB;
+
+  let html = `<div class="card form-hdr">
+    <button class="back-btn" data-a="master">← Torna alla vista master</button>
+    <div class="form-title">${uname}</div>
+    <div class="form-sub">Autovalutazione · ${roleName(urole)}</div>
+  </div>`;
+
+  for(const g of groups){
+    html+=`<div class="area-block"><div class="area-hdr area-hdr-${g.css}"><span class="area-title">${g.area} — ${g.label}</span>${isMaster()?`<span class="area-weight">peso ${Math.round(g.weight*100)}%</span>`:""}</div>`;
+    for(const c of g.criteria){
+      const val = S.ratings[K(uid,"self",c.id)];
+      const note = S.notes[K(uid,"self",c.id)]||"";
+      html+=`<div class="crit-row">
+        <div class="crit-label">${c.l}</div>
+        <div style="font-size:20px;font-weight:800;color:var(--navy);margin:6px 0">
+          ${val==="NV"?`<span style="font-size:13px;font-weight:600;color:var(--g400)">Non valutabile</span>`:val||"—"}
+          ${val&&val!=="NV"?`<span style="font-size:12px;color:var(--g400);font-weight:400"> / 5 — ${RL[val-1]}</span>`:""}
+        </div>
+        ${note?`<div style="font-size:12px;color:var(--g600);font-style:italic">${note}</div>`:""}
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+
+  // Punteggio
+  const sc = weightedScore(uid,"self",groups);
+  const f = fascia(sc);
+  if(sc!==null) html+=`<div class="card score-card"><div class="score-sub">Punteggio ponderato</div><div class="score-big">${sc.toFixed(2)}<span style="font-size:16px;color:var(--g400)"> / 5</span></div><span class="fascia-pill ${f.c}">${f.l}</span></div>`;
+
+  // Risposte aperte
+  const openQs = isM ? OPEN_SELF : OPEN_SELF.filter(q=>q.id!=="q23");
+  const hasOpen = openQs.some(q=>S.openAnswers[K(uid,"self",q.id)]);
+  if(hasOpen){
+    html+=`<div class="card open-card"><h3>Obiettivi e sviluppo futuro</h3>`;
+    for(const q of openQs){
+      const v = S.openAnswers[K(uid,"self",q.id)]||"";
+      if(!v) continue;
+      html+=`<div class="open-q"><label>${q.l}</label><div style="font-size:13px;color:var(--g800);padding:10px;background:var(--g50);border-radius:6px;line-height:1.5">${v}</div></div>`;
+    }
+    html+=`</div>`;
+  }
+
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
 // EXPORT CSV
 // ════════════════════════════════════════════════════════════
 function exportCSV(){
@@ -1521,7 +1577,13 @@ function onClick(e){
   }
   if(a==="dashboard"){ S.view="dashboard"; render(); window.scrollTo(0,0); return; }
   if(a==="autoval"){ S.view="autoval"; render(); window.scrollTo(0,0); return; }
-  if(a==="inspect"){
+  if(a==="inspect-self"){
+    S.inspectSelfUid = el.dataset.uid;
+    S.inspectSelfName = el.dataset.uname;
+    S.inspectSelfRole = el.dataset.urole;
+    S.view = "inspect-self";
+    render(); window.scrollTo(0,0); return;
+  }
     S.inspectId=el.dataset.iid; S.inspectName=el.dataset.iname; S.inspectType=el.dataset.itype;
     S.view="inspect"; render(); window.scrollTo(0,0); return;
   }
